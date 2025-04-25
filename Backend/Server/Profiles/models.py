@@ -104,3 +104,104 @@ class ServiceRecipientProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - پروفایل خدمات گیرنده"
+
+
+
+
+class ServiceAdminProfile(models.Model):
+
+    class GenderChoices(models.TextChoices):
+        WOMEN = 'W', 'خانوم'
+        MAN = 'M', 'آقا'
+
+    user = models.OneToOneField(
+        "Users.User",
+        on_delete=models.CASCADE,
+        related_name="admin_profile",
+        verbose_name="کاربر"
+    )
+    gender = models.CharField(
+        max_length=1,
+        choices=GenderChoices.choices,
+        verbose_name="جنسیت"
+    )
+    age = models.PositiveIntegerField(
+        default=18,
+        verbose_name="سن"
+    )
+    bio = models.TextField(
+        blank=True,
+        verbose_name="بیوگرافی",
+        help_text="توضیح مختصر درباره خودتان"
+    )
+    profile_picture = models.ImageField(
+        upload_to='Profiles/profile_pics/admin/',
+        null=True,
+        blank=True,
+        verbose_name="تصویر پروفایل"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="تاریخ ایجاد"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="تاریخ به‌روزرسانی"
+    )
+
+    class Meta:
+        verbose_name = "پروفایل ادمین"
+        verbose_name_plural = "پروفایل ادمین ها"
+
+    def __str__(self):
+        return f"{self.user.username} - پروفایل ادمین"
+    
+
+
+class ServiceSupportProfile(models.Model):
+
+    class GenderChoices(models.TextChoices):
+        WOMEN = 'W', 'خانوم'
+        MAN = 'M', 'آقا'
+
+    user = models.OneToOneField(
+        "Users.User",
+        on_delete=models.CASCADE,
+        related_name="support_profile",
+        verbose_name="کاربر"
+    )
+    gender = models.CharField(
+        max_length=1,
+        choices=GenderChoices.choices,
+        verbose_name="جنسیت"
+    )
+    age = models.PositiveIntegerField(
+        default=18,
+        verbose_name="سن"
+    )
+    bio = models.TextField(
+        blank=True,
+        verbose_name="بیوگرافی",
+        help_text="توضیح مختصر درباره خودتان"
+    )
+    profile_picture = models.ImageField(
+        upload_to='Profiles/profile_pics/support/',
+        null=True,
+        blank=True,
+        verbose_name="تصویر پروفایل"
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="تاریخ ایجاد"
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="تاریخ به‌روزرسانی"
+    )
+
+    class Meta:
+        verbose_name = "پروفایل پشتیبان"
+        verbose_name_plural = "پروفایل پشتیبان ها"
+
+    def __str__(self):
+        return f"{self.user.username} - پروفایل پشتیبان"
