@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'corsheaders',
 
     # Custom-Apps
+    'Users.apps.UsersConfig',
 ]
 
 MIDDLEWARE = [
