@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'Profiles.apps.ProfilesConfig',
     'Addresses.apps.AddressesConfig',
     'Companies.apps.CompaniesConfig',
+    'Services.apps.ServicesConfig',
 ]
 
 MIDDLEWARE = [
