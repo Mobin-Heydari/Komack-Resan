@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'Addresses.apps.AddressesConfig',
     'Companies.apps.CompaniesConfig',
     'Services.apps.ServicesConfig',
+    'Industries.apps.IndustriesConfig',
 ]
 
 MIDDLEWARE = [
