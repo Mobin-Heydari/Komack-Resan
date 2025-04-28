@@ -131,6 +131,38 @@ class Company(models.Model):
             self.slug = slugify(self.name)
         super(Company, self).save(*args, **kwargs)
 
+    @property
+    def service_scores(self):
+        """
+        Dynamically fetch associated scores from the scores app.
+        """
+        from Scores.models import ServiceScore  # local import to avoid circular dependency
+        return ServiceScore.objects.filter(service_request__service__company=self)
+
+    @property
+    def average_scores(self):
+        """
+        Aggregate the average quality, behavior, and time scores
+        from all the company’s service reviews.
+        """
+        aggregate = self.service_scores.aggregate(
+            avg_quality=models.Avg('quality'),
+            avg_behavior=models.Avg('behavior'),
+            avg_time=models.Avg('time')
+        )
+        return aggregate
+
+    @property
+    def overall_score(self):
+        """
+        Calculate the overall score as the average of the three metrics.
+        """
+        scores = self.average_scores
+        if scores['avg_quality'] is not None:
+            overall = (scores['avg_quality'] + scores['avg_behavior'] + scores['avg_time']) / 3
+            return overall
+        return None
+
 
 
 class CompanyValidationStatus(models.Model):
