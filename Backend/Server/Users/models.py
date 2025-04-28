@@ -3,6 +3,44 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 
 
 
+class IdCardInFormation(models.Model):
+    class IdCardStatus(models.TextChoices):
+        PENDING = 'P', 'درحال برسی'
+        VERIFIED = 'V', 'تایید شده'
+        REJECTED = 'R', 'رد شده'
+
+    id_card_number = models.CharField(
+        verbose_name="شماره ملی",
+        max_length=13,
+        blank=True,
+        null=True
+    )
+
+    id_card = models.FileField(
+        upload_to='Users/id_cards/',
+        verbose_name="کارت ملی",
+        help_text="بارگذاری تصویر/اسکن کارت ملی",
+        blank=True,
+        null=True
+    )
+
+    id_card_status = models.CharField(
+        max_length=1,
+        choices=IdCardStatus.choices,
+        default=IdCardStatus.PENDING,
+        verbose_name="وضعیت کارت ملی",
+        help_text="وضعیت بررسی کارت ملی"
+    )
+
+    class Meta:
+        verbose_name = "اطلاعات carteau ملی"
+
+    def __str__(self):
+        id_val = self.id_card_number if self.id_card_number else "No ID"
+        return f"{id_val} - {self.get_id_card_status_display()}"
+
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     class UserTypes(models.TextChoices):
         SERVICEPROVIDER = "SP", "خدمات دهنده"
@@ -14,6 +52,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     class AccountStatus(models.TextChoices):
         ACTIVE = "ACT", "فعال"
         SUSPENDED = "SUS", "تعلیق شده"
+
+
+    id_card_info = models.OneToOneField(
+        IdCardInFormation,
+        on_delete=models.SET_NULL,
+        verbose_name="اطلاعات کارت ملی",
+        related_name="id_card_info",
+        null=True,
+        blank=True
+    )
 
     user_type = models.CharField(
         max_length=2, 
