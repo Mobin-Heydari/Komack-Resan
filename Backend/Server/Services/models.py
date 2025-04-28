@@ -1,7 +1,8 @@
 from django.db import models
 from Companies.models import Company
 from Industries.models import ServiceIndustry
-
+from Users.models import User
+from Addresses.models import RecipientAddress
 
 
 class Service(models.Model):
@@ -58,6 +59,20 @@ class RecepientServiceRequest(models.Model):
         on_delete=models.CASCADE,
         related_name="serivice_recepient",
         verbose_name="سرویس"
+    )
+
+    recipient = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="recepient_services",
+        verbose_name="سرویس گیرنده"
+    )
+    
+    recipient_address = models.ForeignKey(
+        RecipientAddress,
+        on_delete=models.CASCADE,
+        related_name="service_addresses",
+        verbose_name="آدرس"
     )
 
     title = models.CharField(max_length=255, verbose_name="عنوان")
