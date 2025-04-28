@@ -7,6 +7,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     class UserTypes(models.TextChoices):
         SERVICEPROVIDER = "SP", "خدمات دهنده"
         SERVICERECIPIENT = "SC", "خدمات گیرنده"
+        OWNER = "OW", "مالک"
         SUPPORT = "SU", "پشتیبان"
         ADMIN = "AD", "مدیر"
 
