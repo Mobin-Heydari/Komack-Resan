@@ -46,3 +46,30 @@ class Industry(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ServiceIndustry(models.Model):
+    name = models.CharField(max_length=100, unique=True, verbose_name="نام")
+    slug = models.SlugField(max_length=100, unique=True, blank=True, verbose_name="اسلاگ")
+
+    icon = models.ImageField(upload_to='Industry/industries-icon/', null=True, blank=True, verbose_name="آیکون")
+
+    industry = models.ForeignKey(
+        Industry,
+        on_delete=models.CASCADE,
+        related_name="industry_service",
+        verbose_name="صنعت"
+    )
+
+    class Meta:
+        verbose_name = "سرویس صنعت"
+        verbose_name_plural = "سرویس های صنعت"
+        ordering = ['-industry']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.name
