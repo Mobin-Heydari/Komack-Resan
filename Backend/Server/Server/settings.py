@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'Services.apps.ServicesConfig',
     'Industries.apps.IndustriesConfig',
     'Scores.apps.ScoresConfig',
+    'Authentication.apps.AuthenticationConfig',
 ]
 
 MIDDLEWARE = [
