@@ -75,25 +75,11 @@ class RecepientServiceRequest(models.Model):
         REPORTED = 'RE', 'گزارش شده'
 
     
-    expert = models.ForeignKey(
+    owner = models.ForeignKey(
         User,
-        verbose_name="متخصص",
+        verbose_name="مالک",
         on_delete=models.CASCADE,
-        related_name="service_expert",
-    )
-
-    receptionist = models.ForeignKey(
-        User,
-        verbose_name="منشی",
-        on_delete=models.CASCADE,
-        related_name="service_receptionist",
-    )
-
-    accountant = models.ForeignKey(
-        User,
-        verbose_name="حسابدار",
-        on_delete=models.CASCADE,
-        related_name="service_accountant",
+        related_name="service_owner",
     )
 
     service = models.ForeignKey(
@@ -154,3 +140,38 @@ class RecepientServiceRequest(models.Model):
         Returns True if this request already has an associated score.
         """
         return hasattr(self, 'score')
+
+
+
+class RecepientServiceRequestEmployees(models.Model):
+
+    recipient_service = models.ForeignKey(
+        RecepientServiceRequest,
+        on_delete=models.CASCADE,
+        related_name="service_workers",
+        verbose_name="سرویس درخاست شده"
+    )
+    
+    employee = models.ForeignKey(
+        CompanyEmployee,
+        on_delete=models.CASCADE,
+        related_name="service_company_worker"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="تاریخ ایجاد"
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="تاریخ بروزرسانی"
+    )
+
+    class Meta:
+        verbose_name = "کارمند سرویس"
+        verbose_name_plural = "کارمندان سرویس ها"
+
+
+    def __str__(self):
+        return 
