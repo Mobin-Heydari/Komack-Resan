@@ -272,3 +272,49 @@ class CompanyValidationStatus(models.Model):
         self.overall_status = 'approved'
         self.validated_at = timezone.now()
         self.save()
+
+
+class CompanyEmployee(models.Model):
+
+    class EmployeePositionChoices(models.TextChoices):
+        RECEPTIONIST = 'RE', 'منشی'
+        ACCOUNTENT = 'AC', 'حسابدار'
+        EXPERT = 'EX', 'متخصص'
+
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="employees",
+        verbose_name="شرکت"
+    )
+
+    employee = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="employee_company",
+        verbose_name="کارمند"
+    )
+
+    position = models.CharField(
+        max_length=2,
+        choices=EmployeePositionChoices.choices,
+        verbose_name="موقعیت شغلی"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="تاریخ ایجاد"
+    )
+    
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="تاریخ بروزرسانی"
+    )
+
+    class Meta:
+        verbose_name ="کارمند"
+        verbose_name ="کارمند ها"
+    
+
+    def __str__(self):
+        return self.employee.username
