@@ -278,7 +278,7 @@ class CompanyEmployee(models.Model):
 
     class EmployeePositionChoices(models.TextChoices):
         RECEPTIONIST = 'RE', 'منشی'
-        ACCOUNTENT = 'AC', 'حسابدار'
+        ACCOUNTANT = 'AC', 'حسابدار'
         EXPERT = 'EX', 'متخصص'
 
     company = models.ForeignKey(
@@ -305,7 +305,7 @@ class CompanyEmployee(models.Model):
         auto_now_add=True,
         verbose_name="تاریخ ایجاد"
     )
-    
+
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name="تاریخ بروزرسانی"

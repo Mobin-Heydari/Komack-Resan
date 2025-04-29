@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import Avg
-from Companies.models import Company
+from Companies.models import Company, CompanyEmployee
 from Industries.models import ServiceIndustry
 from Users.models import User
 from Addresses.models import RecipientAddress
@@ -65,6 +65,7 @@ class RecepientServiceRequest(models.Model):
         UNPAID = 'UP', 'پرداخت نشده'
         FAILED = 'FA', 'ناموفق'
     
+
     class ServiceStatusChoices(models.TextChoices):
         PENDING = 'PE', 'درحال بررسی'
         IN_PROGRESS = 'IP', 'درحال اجرا'
@@ -72,25 +73,50 @@ class RecepientServiceRequest(models.Model):
         CANCELED = 'CA', 'کنسل شده'
         FAILED = 'FA', 'شکست خورده'
         REPORTED = 'RE', 'گزارش شده'
+
     
+    expert = models.ForeignKey(
+        User,
+        verbose_name="متخصص",
+        on_delete=models.CASCADE,
+        related_name="service_expert",
+    )
+
+    receptionist = models.ForeignKey(
+        User,
+        verbose_name="منشی",
+        on_delete=models.CASCADE,
+        related_name="service_receptionist",
+    )
+
+    accountant = models.ForeignKey(
+        User,
+        verbose_name="حسابدار",
+        on_delete=models.CASCADE,
+        related_name="service_accountant",
+    )
+
     service = models.ForeignKey(
         Service,
         on_delete=models.CASCADE,
         related_name="serivice_recepient",
         verbose_name="سرویس"
     )
+
     recipient = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="recepient_services",
         verbose_name="سرویس گیرنده"
     )
+
     recipient_address = models.ForeignKey(
         RecipientAddress,
         on_delete=models.CASCADE,
         related_name="service_addresses",
         verbose_name="آدرس"
     )
+
     title = models.CharField(max_length=255, verbose_name="عنوان")
     slug = models.SlugField(max_length=255, verbose_name="اسلاگ")
     descriptions = models.TextField(verbose_name="توضیحات")
@@ -101,14 +127,17 @@ class RecepientServiceRequest(models.Model):
         default=PaymentStatusChoices.UNPAID,
         verbose_name="وضعیت پرداخت"
     )
+
     service_status = models.CharField(
         max_length=3,
         choices=ServiceStatusChoices.choices,
         default=ServiceStatusChoices.PENDING,
         verbose_name="وضعیت سرویس"
     )
+
     started_at = models.DateTimeField(null=True, verbose_name="زمان شروع")
     finished_at = models.DateTimeField(null=True, verbose_name="زمان پایان")
+
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
 
