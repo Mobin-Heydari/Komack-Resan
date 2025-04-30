@@ -1,71 +1,17 @@
 from django.db import models
-from django.db.models import Avg
 from Companies.models import Company, CompanyEmployee
-from Industries.models import ServiceIndustry
 from Users.models import User
 from Addresses.models import RecipientAddress
 
 
 
-
 class Service(models.Model):
-    company = models.ForeignKey(
-        Company,
-        on_delete=models.CASCADE,
-        related_name="service_company",
-        verbose_name="شرکت"
-    )
-    service_industry = models.ForeignKey(
-        ServiceIndustry,
-        on_delete=models.CASCADE,
-        related_name="services",
-        verbose_name="صنعت سرویس"
-    )
-    title = models.CharField(max_length=255, verbose_name="عنوان")
-    slug = models.SlugField(max_length=255, verbose_name="اسلاگ")
-    descriptions = models.TextField(verbose_name="توضیحات")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
 
-    class Meta:
-        verbose_name = "سرویس"
-        verbose_name_plural = "سرویس‌ها"
-
-    def __str__(self):
-        return self.title
-
-    @property
-    def average_scores(self):
-        """
-        Aggregates the average scores (quality, behavior, time)
-        from the associated service requests that have been scored.
-        """
-        aggregate = self.serivice_recepient.filter(score__isnull=False).aggregate(
-            avg_quality=Avg('score__quality'),
-            avg_behavior=Avg('score__behavior'),
-            avg_time=Avg('score__time')
-        )
-        return aggregate
-
-    @property
-    def overall_score(self):
-        """
-        Computes an overall score from the average metrics.
-        """
-        scores = self.average_scores
-        if scores['avg_quality'] is not None:
-            overall = (scores['avg_quality'] + scores['avg_behavior'] + scores['avg_time']) / 3
-            return overall
-        return None
-
-
-class RecepientServiceRequest(models.Model):
     class PaymentStatusChoices(models.TextChoices):
         PAID = 'PA', 'پرداخت شده'
         UNPAID = 'UP', 'پرداخت نشده'
         FAILED = 'FA', 'ناموفق'
     
-
     class ServiceStatusChoices(models.TextChoices):
         PENDING = 'PE', 'درحال بررسی'
         IN_PROGRESS = 'IP', 'درحال اجرا'
@@ -74,19 +20,18 @@ class RecepientServiceRequest(models.Model):
         FAILED = 'FA', 'شکست خورده'
         REPORTED = 'RE', 'گزارش شده'
 
-    
-    owner = models.ForeignKey(
-        User,
-        verbose_name="مالک",
+    company = models.ForeignKey(
+        Company,
         on_delete=models.CASCADE,
-        related_name="service_owner",
+        related_name="service_company",
+        verbose_name="شرکت"
     )
-
-    service = models.ForeignKey(
-        Service,
+    
+    service_provider = models.ForeignKey(
+        User,
+        verbose_name="سرویس دهنده",
         on_delete=models.CASCADE,
-        related_name="serivice_recepient",
-        verbose_name="سرویس"
+        related_name="service_owner"
     )
 
     recipient = models.ForeignKey(
@@ -128,8 +73,8 @@ class RecepientServiceRequest(models.Model):
     updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
 
     class Meta:
-        verbose_name = "درخواست سرویس"
-        verbose_name_plural = "درخواست‌های سرویس"
+        verbose_name = "سرویس"
+        verbose_name_plural = "سرویس‌ها"
 
     def __str__(self):
         return self.title
@@ -137,41 +82,88 @@ class RecepientServiceRequest(models.Model):
     @property
     def has_score(self):
         """
-        Returns True if this request already has an associated score.
+        Returns True if this service already has an associated score.
         """
         return hasattr(self, 'score')
 
+    @property
+    def overall_score(self):
+        """
+        Computes an overall score from the score details.
+        Returns the average of quality, behavior, and time if a score exists.
+        Otherwise, returns None.
+        """
+        if self.has_score:
+            # Access the related score via the one-to-one reverse relation.
+            score = self.score
+            return (score.quality + score.behavior + score.time) / 3
+        return None
 
 
-class RecepientServiceRequestEmployees(models.Model):
+class ServiceContent(models.Model):
+    service = models.ForeignKey(
+        Service,
+        on_delete=models.CASCADE,
+        related_name='Content',
+        verbose_name="سرویس"
+    )
+
+    title = models.CharField(
+        verbose_name="عنوان",
+        max_length=255,
+        blank=True,
+        null=True
+    )
+
+    image = models.ImageField(
+        verbose_name="عکس",
+        upload_to="Services/content/images/",
+        null=True,
+        blank=True
+    )
+
+    video = models.FileField(
+        verbose_name="ویدیو",
+        upload_to="Services/content/videos/",
+        null=True,
+        blank=True
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
+
+    class Meta:
+        verbose_name = 'محتوای سرویس'
+        verbose_name_plural = 'محتواهای سرویس‌ها'
+
+    def __str__(self):
+        return f'{self.service.title}'
+
+
+class ServiceEmployees(models.Model):
+
+    job_title = models.CharField(max_length=255, verbose_name="سمت کاری")
 
     recipient_service = models.ForeignKey(
-        RecepientServiceRequest,
+        Service,
         on_delete=models.CASCADE,
         related_name="service_workers",
-        verbose_name="سرویس درخاست شده"
+        verbose_name="سرویس درخواست شده"
     )
-    
+
     employee = models.ForeignKey(
         CompanyEmployee,
         on_delete=models.CASCADE,
-        related_name="service_company_worker"
+        related_name="service_company_worker",
+        verbose_name="کارمند شرکت"
     )
 
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="تاریخ ایجاد"
-    )
-
-    updated_at = models.DateTimeField(
-        auto_now=True,
-        verbose_name="تاریخ بروزرسانی"
-    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
 
     class Meta:
         verbose_name = "کارمند سرویس"
-        verbose_name_plural = "کارمندان سرویس ها"
-
+        verbose_name_plural = "کارمندان سرویس‌ها"
 
     def __str__(self):
-        return 
+        return self.job_title

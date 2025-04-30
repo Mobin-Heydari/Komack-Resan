@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 from Users.models import User
+from Industries.models import Industry
 
 
 
@@ -11,7 +12,11 @@ class Company(models.Model):
         on_delete=models.CASCADE,
         verbose_name="مدیرعامل"
     )
-
+    industry = models.ForeignKey(
+        Industry,
+        on_delete=models.CASCADE,
+        verbose_name="صنعت"
+    )
     name = models.CharField(
         max_length=255, 
         unique=True,
@@ -106,7 +111,6 @@ class Company(models.Model):
         verbose_name="لینک Instagram"
     )
 
-
     is_validated = models.BooleanField(
         default=False,
         verbose_name="تایید شده توسط ادمین",
@@ -134,16 +138,16 @@ class Company(models.Model):
     @property
     def service_scores(self):
         """
-        Dynamically fetch associated scores from the scores app.
+        دریافت امتیازات سرویس‌های مربوط به این شرکت 
+        از طریق ارتباط یک به یک بین سرویس و امتیاز.
         """
-        from Scores.models import ServiceScore  # local import to avoid circular dependency
-        return ServiceScore.objects.filter(service_request__service__company=self)
+        from Scores.models import ServiceScore  # Import local to avoid circular dependency.
+        return ServiceScore.objects.filter(service__company=self)
 
     @property
     def average_scores(self):
         """
-        Aggregate the average quality, behavior, and time scores
-        from all the company’s service reviews.
+        میانگین امتیازات کیفیت، رفتار و سرعت بر روی تمامی سرویس‌های این شرکت.
         """
         aggregate = self.service_scores.aggregate(
             avg_quality=models.Avg('quality'),
@@ -155,7 +159,7 @@ class Company(models.Model):
     @property
     def overall_score(self):
         """
-        Calculate the overall score as the average of the three metrics.
+        محاسبه امتیاز کلی به عنوان میانگین سه شاخص.
         """
         scores = self.average_scores
         if scores['avg_quality'] is not None:
