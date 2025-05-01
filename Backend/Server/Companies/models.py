@@ -1,48 +1,64 @@
 from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
+from django.core.exceptions import ValidationError
+
 from Users.models import User
 from Industries.models import Industry
 
 
 
 class Company(models.Model):
+
+    class ServiceType(models.TextChoices):
+        IN_HOUSE_SERVICE = 'IHS', 'خدمات در منزل'
+        IN_COMPANY_SERVICE = 'ICS', 'خدمات در شرکت'
+        BOTH = 'BOT', 'هر دو'
+
+
     employer = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name="مدیرعامل"
     )
+
     industry = models.ForeignKey(
         Industry,
         on_delete=models.CASCADE,
         verbose_name="صنعت"
     )
+
     name = models.CharField(
         max_length=255, 
         unique=True,
         verbose_name="نام شرکت"
     )
+
     slug = models.SlugField(
         max_length=255, 
         unique=True,
         blank=True,
         verbose_name="اسلاگ"
     )
+
     description = models.TextField(
         blank=True,
         null=True,
         verbose_name="توضیحات"
     )
+
     website = models.URLField(
         blank=True,
         null=True,
         verbose_name="وبسایت"
     )
+
     email = models.EmailField(
         blank=True,
         null=True,
         verbose_name="ایمیل"
     )
+
     phone_number = models.CharField(
         max_length=20, 
         blank=True,
@@ -89,26 +105,30 @@ class Company(models.Model):
         null=True,
         verbose_name="تاریخ تأسیس"
     )
-    number_of_employees = models.IntegerField(
-        blank=True,
-        null=True,
-        verbose_name="تعداد کارکنان"
-    )
 
     linkedin = models.URLField(
         blank=True,
         null=True,
         verbose_name="لینک LinkedIn"
     )
+
     twitter = models.URLField(
         blank=True,
         null=True,
         verbose_name="لینک Twitter"
     )
+
     instagram = models.URLField(
         blank=True,
         null=True,
         verbose_name="لینک Instagram"
+    )
+
+    service_type = models.CharField(
+        max_length=3,
+        verbose_name="نوع خدمات",
+        choices=ServiceType.choices,
+        default=ServiceType.IN_COMPANY_SERVICE
     )
 
     is_validated = models.BooleanField(
@@ -117,10 +137,16 @@ class Company(models.Model):
         help_text="در صورت True بودن، شرکت توسط ادمین تایید شده است."
     )
 
+    is_off_season = models.BooleanField(
+        default=False,
+        verbose_name="فصل تعطیلات / غیر کاری"
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True,
         verbose_name="تاریخ ایجاد"
     )
+
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name="تاریخ بروزرسانی"
@@ -178,7 +204,7 @@ class CompanyValidationStatus(models.Model):
 
 
     company = models.OneToOneField(
-        'Company',
+        Company,
         on_delete=models.CASCADE,
         related_name='validation_status',
         verbose_name="شرکت"
@@ -189,39 +215,9 @@ class CompanyValidationStatus(models.Model):
         verbose_name="جواز کسب"
     )
 
-    tax_certificate = models.FileField(
-        upload_to="Companies/Validations/",
-        verbose_name="گواهی مالیاتی"
-    )
-
-    safety_clearance = models.FileField(
-        upload_to="Companies/Validations/",
-        verbose_name="مجوز ایمنی"
-    )
-
-    compliance_certificate = models.FileField(
-        upload_to="Companies/Validations/",
-        verbose_name="گواهینامه انطباق"
-    )
-
     business_license_status = models.BooleanField(
         default=False,
         verbose_name="جواز کسب"
-    )
-
-    tax_certificate_status = models.BooleanField(
-        default=False,
-        verbose_name="گواهی مالیاتی"
-    )
-
-    safety_clearance_status = models.BooleanField(
-        default=False,
-        verbose_name="مجوز ایمنی"
-    )
-
-    compliance_certificate_status = models.BooleanField(
-        default=False,
-        verbose_name="گواهینامه انطباق"
     )
 
     overall_status = models.CharField(
@@ -258,6 +254,7 @@ class CompanyValidationStatus(models.Model):
         auto_now_add=True,
         verbose_name="تاریخ ایجاد"
     )
+    
     updated_at = models.DateTimeField(
         auto_now=True,
         verbose_name="تاریخ بروزرسانی"
@@ -322,3 +319,83 @@ class CompanyEmployee(models.Model):
 
     def __str__(self):
         return self.employee.username
+    
+
+
+class WorkDay(models.Model):
+    class DayOfWeek(models.TextChoices):
+        MONDAY = 'monday', 'دوشنبه'
+        TUESDAY = 'tuesday', 'سه‌شنبه'
+        WEDNESDAY = 'wednesday', 'چهارشنبه'
+        THURSDAY = 'thursday', 'پنج‌شنبه'
+        FRIDAY = 'friday', 'جمعه'
+        SATURDAY = 'saturday', 'شنبه'
+        SUNDAY = 'sunday', 'یکشنبه'
+
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name='workdays',
+        verbose_name="شرکت مربوطه"
+    )
+
+    day_of_week = models.CharField(
+        max_length=10,
+        choices=DayOfWeek.choices,
+        verbose_name="روز هفته"
+    )
+
+    open_time = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="زمان شروع"
+    )
+
+    close_time = models.TimeField(
+        null=True,
+        blank=True,
+        verbose_name="زمان پایان"
+    )
+
+    is_closed = models.BooleanField(
+        default=False,
+        verbose_name="تعطیل بودن"
+    )
+
+
+    class Meta:
+        unique_together = ('company', 'day_of_week')
+        verbose_name = "روز کاری"
+        verbose_name_plural = "روزهای کاری"
+        # Optionally, add ordering for a natural week order if desired.
+        # ordering = ['day_of_week']
+
+
+    def clean(self):
+        """
+        Ensure consistency:
+          - If the day is marked as closed, no open or close times should be set.
+          - Otherwise, both open_time and close_time must be provided.
+        """
+        if self.is_closed:
+            if self.open_time or self.close_time:
+                raise ValidationError("برای روز تعطیل، زمان شروع و پایان باید خالی باشد.")
+        else:
+            if self.open_time is None or self.close_time is None:
+                raise ValidationError("برای روز کاری، هر دو زمان شروع و پایان باید تعیین شوند.")
+    
+
+    @property
+    def time_range(self):
+        """
+        Returns a formatted string displaying working hours, or 'Closed' if the company is off.
+        """
+        if self.is_closed:
+            return "Closed"
+        if self.open_time and self.close_time:
+            return f"{self.open_time.strftime('%H:%M')} - {self.close_time.strftime('%H:%M')}"
+        return "Not Set"
+
+
+    def __str__(self):
+        return f"{self.get_day_of_week_display()}: {self.time_range}"
