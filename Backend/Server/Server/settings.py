@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'Scores.apps.ScoresConfig',
     'Authentication.apps.AuthenticationConfig',
     'Invoices.apps.InvoicesConfig',
+    'Payments.apps.PaymentsConfig',
 ]
 
 MIDDLEWARE = [
