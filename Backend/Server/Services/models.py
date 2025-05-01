@@ -66,6 +66,11 @@ class Service(models.Model):
         verbose_name="وضعیت سرویس"
     )
 
+    is_invoiced = models.BooleanField(
+        default=False,
+        verbose_name="به فاکتور اضافه شده"
+    )
+
     started_at = models.DateTimeField(null=True, verbose_name="زمان شروع")
     finished_at = models.DateTimeField(null=True, verbose_name="زمان پایان")
 

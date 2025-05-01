@@ -34,6 +34,8 @@ class Industry(models.Model):
 
     icon = models.ImageField(upload_to='Industry/industries-icon/', null=True, blank=True, verbose_name="آیکون")
 
+    price_per_service = models.BigIntegerField(verbose_name="قیمت هر سرویس", default=0)
+
     class Meta:
         verbose_name = "صنعت"
         verbose_name_plural = "صنایع"
