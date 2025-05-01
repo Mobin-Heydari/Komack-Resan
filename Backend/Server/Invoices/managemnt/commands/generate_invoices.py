@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 from Companies.models import Company
@@ -36,11 +36,13 @@ class Command(BaseCommand):
             if not services_to_invoice.exists():
                 continue
 
+            # Set a deadline 30 days from now (adjust as needed)
+            deadline = timezone.now() + timedelta(days=30)
+            
             # Create an invoice for the company
             invoice = Invoice.objects.create(
                 company=company,
-                month=invoice_month,
-                year=invoice_year
+                deadline=deadline
             )
 
             for service in services_to_invoice:
@@ -57,7 +59,8 @@ class Command(BaseCommand):
             # Calculate and update the invoice total based on all invoice items.
             invoice.calculate_total()
             self.stdout.write(
-                f"Created Invoice #{invoice.id} for {company.name} with total amount {invoice.total_amount}."
+                f"Created Invoice #{invoice.id} for {company.name} with total amount {invoice.total_amount} "
+                f"and deadline {invoice.deadline.strftime('%Y-%m-%d %H:%M')}."
             )
 
         self.stdout.write("Invoice generation completed.")
