@@ -248,7 +248,7 @@ class Company(models.Model):
         )
         return aggregate
 
-    
+
     @property
     def overall_score(self):
         """
@@ -489,7 +489,7 @@ class CompanyFirstItem(models.Model):
 
 
 
-class CompanyFirstItem(models.Model):
+class CompanySecondItem(models.Model):
     second_item = models.ForeignKey(
         SecondItem,
         on_delete=models.CASCADE,
