@@ -5,7 +5,7 @@ from rest_framework import validators
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from Users.models import User, IdCardInFormation
-from .models import OneTimePassword
+from .models import OneTimePassword, UserRegisterOTP
 
 from random import randint
 
@@ -38,7 +38,7 @@ class LoginSerializer(serializers.Serializer):
 
     phone = serializers.CharField(max_length=255)
     password = serializers.CharField(max_length=255, write_only=True)
-    
+
 
     def validate_phone(self, value):
         if not User.objects.filter(phone=value).exists():
@@ -61,3 +61,34 @@ class LoginSerializer(serializers.Serializer):
         if not user.check_password(password):
             raise serializers.ValidationError('رمز عبور اشتباه است')
         return data
+    
+
+
+class UserRegisterOneTimePasswordSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = UserRegisterOTP
+        fields = "__all__"
+        read_only_fields = ['otp']
+
+
+    def create(self, validated_data):
+        code = randint(100000, 999999)
+        token = get_random_string(100)
+        otp = OneTimePassword.objects.create(
+            token=token,
+            code=code
+        )
+        otp.save()
+        otp.get_expiration()
+        user_register_otp = UserRegisterOTP.objects.create(
+            otp=otp,
+            email=validated_data['email'],
+            phone=validated_data['phone'],
+            username=validated_data['username'],
+            password=validated_data['password'],
+            full_name=validated_data['full_name'],
+            password_conf=validated_data['password_conf']
+        )
+        user_register_otp.save()
+        return {'phone': user_register_otp.phone, 'token': token, 'code': code}
