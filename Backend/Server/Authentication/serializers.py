@@ -21,15 +21,21 @@ class OneTimePasswordSerializer(serializers.ModelSerializer):
     
 
     def create(self, validated_data):
+
         code = randint(100000, 999999)
+
         token = get_random_string(100)
+
         otp = OneTimePassword.objects.create(
             phone=validated_data['phone'],
             token=token,
             code=code
         )
+
         otp.save()
+
         otp.get_expiration()
+        
         return {'token': token, 'code': code}
     
 
@@ -53,11 +59,16 @@ class LoginSerializer(serializers.Serializer):
 
 
     def validate(self, data):
+
         phone = data.get('phone')
+
         password = data.get('password')
+
         if phone is None or password is None:
             raise serializers.ValidationError('شماره تلفن و رمز عبور هر دو الزامی هستند')
+        
         user = User.objects.get(phone=phone)
+
         if not user.check_password(password):
             raise serializers.ValidationError('رمز عبور اشتباه است')
         return data
@@ -73,14 +84,20 @@ class UserRegisterOneTimePasswordSerializer(serializers.ModelSerializer):
 
 
     def create(self, validated_data):
+
         code = randint(100000, 999999)
+
         token = get_random_string(100)
+
         otp = OneTimePassword.objects.create(
             token=token,
             code=code
         )
+
         otp.save()
+
         otp.get_expiration()
+
         user_register_otp = UserRegisterOTP.objects.create(
             otp=otp,
             email=validated_data['email'],
@@ -90,5 +107,62 @@ class UserRegisterOneTimePasswordSerializer(serializers.ModelSerializer):
             full_name=validated_data['full_name'],
             password_conf=validated_data['password_conf']
         )
+
         user_register_otp.save()
+
         return {'phone': user_register_otp.phone, 'token': token, 'code': code}
+    
+
+
+class UserRegisterSerializer(serializers.Serializer):
+
+    code = serializers.CharField(max_length=6, min_length=6, required=True)  
+
+    def validate(self, attrs):
+
+        otp_token = self.context.get('otp_token')
+        otp = OneTimePassword.objects.get(token=otp_token)
+        if otp.status_validation() == 'ACT':
+            if otp.code == attrs['code']:
+                return attrs
+            else:
+                raise serializers.ValidationError({'code': 'Invalid OTP code.'})
+        else:
+            raise serializers.ValidationError('Inactive OTP')
+    
+
+    def create(self, validated_data, token):
+
+        otp = OneTimePassword.objects.get(token=token)
+
+        user_register_otp = otp.registration_otps
+
+        id_card_info = IdCardInFormation.objects.create()
+
+        user = User.objects.create_user(
+            email=user_register_otp.email,
+            phone=user_register_otp.phone,
+            username=user_register_otp.username,
+            password=user_register_otp.password,
+            full_name=user_register_otp.full_name,
+            user_type=user_register_otp.user_type
+        )
+
+        user.id_card_info = id_card_info
+
+        user.save()
+
+        refresh = RefreshToken.for_user(user)
+
+        return {
+            'user': {
+                'username': user.username,
+                'email': user.email,
+                'phone': user.phone,
+                'user_type': user.user_type
+            },
+            'tokens': {
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+            }
+        }
