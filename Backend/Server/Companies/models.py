@@ -8,6 +8,63 @@ from Industries.models import Industry
 
 
 
+
+
+class FirstItem(models.Model):
+
+    name = models.CharField(max_length=255, verbose_name="نام", unique=True)
+    slug = models.SlugField(max_length=255, verbose_name="اسلاگ", unique=True)
+
+    icon = models.FileField(
+        upload_to="Companies/items/first/",
+        verbose_name="آیکون",
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = "آیتم یک"
+        verbose_name_plural = "آیتم های یک"
+
+
+    def __str__(self):
+        return self.name
+    
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super(FirstItem, self).save(*args, **kwargs)
+    
+
+class SecondItem(models.Model):
+
+    name = models.CharField(max_length=255, verbose_name="نام", unique=True)
+    slug = models.SlugField(max_length=255, verbose_name="اسلاگ", unique=True)
+
+    icon = models.FileField(
+        upload_to="Companies/items/second/",
+        verbose_name="آیکون",
+        null=True,
+        blank=True
+    )
+
+    class Meta:
+        verbose_name = "آیتم دو"
+        verbose_name_plural = "آیتم های دو"
+
+
+    def __str__(self):
+        return self.name
+    
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super(SecondItem, self).save(*args, **kwargs)
+
+
+
 class Company(models.Model):
 
     class ServiceType(models.TextChoices):
@@ -152,14 +209,22 @@ class Company(models.Model):
         verbose_name="تاریخ بروزرسانی"
     )
 
+
+    class Meta:
+        verbose_name = "شرکت"
+        verbose_name_plural = "شرکت ها"
+
+
     def __str__(self):
         return self.name
+
 
     def save(self, *args, **kwargs):
         # در صورتی که فیلد slug خالی باشد، از نام شرکت تولید می‌شود.
         if not self.slug:
             self.slug = slugify(self.name)
         super(Company, self).save(*args, **kwargs)
+
 
     @property
     def service_scores(self):
@@ -169,6 +234,7 @@ class Company(models.Model):
         """
         from Scores.models import ServiceScore  # Import local to avoid circular dependency.
         return ServiceScore.objects.filter(service__company=self)
+
 
     @property
     def average_scores(self):
@@ -182,6 +248,7 @@ class Company(models.Model):
         )
         return aggregate
 
+    
     @property
     def overall_score(self):
         """
@@ -263,7 +330,7 @@ class CompanyValidationStatus(models.Model):
 
     class Meta:
         verbose_name = "وضعیت شرکت"
-        verbose_name = "وضعیت شرکت ها"
+        verbose_name_plural = "وضعیت شرکت ها"
 
 
     def __str__(self):
@@ -399,3 +466,44 @@ class WorkDay(models.Model):
 
     def __str__(self):
         return f"{self.get_day_of_week_display()}: {self.time_range}"
+    
+
+class CompanyFirstItem(models.Model):
+    first_item = models.ForeignKey(
+        FirstItem,
+        on_delete=models.CASCADE,
+        related_name="company_first_item",
+        verbose_name="آیتم"
+    )
+
+    compay = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="companies_first_item",
+        verbose_name="شرکت"
+    )
+
+    class Meta:
+        verbose_name = "آیتم اول شرکت"
+        verbose_name_plural = "آیتم های اول شرکت"
+
+
+
+class CompanyFirstItem(models.Model):
+    second_item = models.ForeignKey(
+        SecondItem,
+        on_delete=models.CASCADE,
+        related_name="company_second_item",
+        verbose_name="آیتم"
+    )
+
+    compay = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="companies_second_item",
+        verbose_name="شرکت"
+    )
+
+    class Meta:
+        verbose_name = "آیتم دوم شرکت"
+        verbose_name_plural = "آیتم های دوم شرکت"
