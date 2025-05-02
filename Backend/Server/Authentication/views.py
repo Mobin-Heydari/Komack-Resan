@@ -7,7 +7,7 @@ from rest_framework.exceptions import ValidationError
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import LoginSerializer
+from .serializers import LoginSerializer, UserRegisterOneTimePasswordSerializer
 from .models import OneTimePassword, UserRegisterOTP
 
 from Users.models import User
@@ -46,3 +46,32 @@ class LoginAPIView(APIView):
         if isinstance(exc, ValidationError):
             return Response({'error': 'خطای اعتبارسنجی'}, status=status.HTTP_400_BAD_REQUEST)
         return super().handle_exception(exc)
+
+
+
+class UserRegisterOtpAPIView(APIView):
+
+    def post(self, request):
+        
+        if not request.user.is_authenticated:  
+
+            serializer = UserRegisterOneTimePasswordSerializer(data=request.data)
+
+            if serializer.is_valid(raise_exception=True):
+
+                otp_data = serializer.create(validated_data=serializer.validated_data)
+
+                return Response(
+                    {
+                        'Detail': {
+                            'Message': 'Otp created successfully',
+                            'token': otp_data['token'], 
+                            'code': otp_data['code']
+                        }
+                    },
+                    status=status.HTTP_201_CREATED
+                )
+            else:
+                return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({'Detail': 'You are already logged in'}, status=status.HTTP_400_BAD_REQUEST)
