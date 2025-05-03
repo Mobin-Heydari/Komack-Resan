@@ -237,7 +237,7 @@ class UserRegisterSerializer(serializers.Serializer):
 
         id_card_info = IdCardInFormation.objects.create()
 
-        user = User.objects.create(
+        user = User.objects.create_user(
             email=user_register_otp.email,
             phone=user_register_otp.phone,
             username=user_register_otp.username,
