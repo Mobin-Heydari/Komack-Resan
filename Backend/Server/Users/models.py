@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
-
+from .managers import UserManager
 
 
 class IdCardInFormation(models.Model):
@@ -118,6 +118,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=False,
         verbose_name="مدیر"
     )
+
+    objects = UserManager()
 
     USERNAME_FIELD = "phone"
     REQUIRED_FIELDS = ["username", "email", "full_name", "user_type"]
