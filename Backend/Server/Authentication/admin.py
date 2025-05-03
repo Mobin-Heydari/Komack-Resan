@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import OneTimePassword, UserRegisterOTP
 
-# Register your models here.
+
+admin.site.register(OneTimePassword)
+admin.site.register(UserRegisterOTP)

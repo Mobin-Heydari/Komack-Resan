@@ -1,11 +1,13 @@
 from django.db import models
 from django.utils import timezone
+import uuid
 
 
 class OneTimePassword(models.Model):
     class OtpStatus(models.TextChoices):
         EXPIRED = 'EXP' 
         ACTIVE = 'ACT'
+        USED = 'USE'
 
     status = models.CharField(
         max_length=3,
@@ -13,14 +15,13 @@ class OneTimePassword(models.Model):
         default=OtpStatus.ACTIVE
     )
     
-    token = models.CharField(
-        max_length=250,
-        unique=True
-    )
+    token = models.UUIDField(verbose_name="توکن", primary_key=True, default=uuid.uuid4)
     
     code = models.CharField(max_length=6)
     
     expiration = models.DateTimeField(blank=True, null=True)
+
+    is_used = models.BooleanField(default=False, verbose_name="استفاده شده؟")
     
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -44,9 +45,14 @@ class OneTimePassword(models.Model):
         self.save()
 
     def status_validation(self):
+        if self.is_used == True:
+            self.status = 'USE'
         if self.expiration <= timezone.now():
-            self.status = 'EXP'
-            return self.status
+            if not self.status == 'USE':
+                self.status = 'EXP'
+                return self.status
+            else:
+                return self.status
         else:
             return self.status
 
@@ -70,10 +76,7 @@ class UserRegisterOTP(models.Model):
 
     password_conf = models.CharField(max_length=255)
 
-    user_type = models.CharField(
-        max_length=2,
-        default="JS"
-    )
+    user_type = models.CharField(max_length=3)
     
     created_at = models.DateTimeField(
         auto_now_add=True,
@@ -89,4 +92,4 @@ class UserRegisterOTP(models.Model):
         verbose_name = "رمز یکبار مصرف ثبت نام کاربر"
 
     def __str__(self):
-        return f"ثبت نام برای {self.username} - {self.otp.token}"
+        return f"{self.username} - {self.otp.token} - {self.user_type}"
