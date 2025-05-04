@@ -1,3 +1,5 @@
+from django.utils.text import slugify
+
 from rest_framework import serializers
 from rest_framework.validators import ValidationError
 
@@ -14,6 +16,19 @@ class IndustryCategorySerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
+    
+    def create(self, validated_data):
+        slug = slugify(value=validated_data['name'], allow_unicode=True)
+
+        category = IndustryCategory.objects.create(
+            slug=slug,
+            name=validated_data['name'],
+            icon=validated_data['icon']
+        )
+        
+        category.save()
+
+        return category
 
 
 class IndustrySerializer(serializers.ModelSerializer):
@@ -29,5 +44,30 @@ class IndustrySerializer(serializers.ModelSerializer):
             raise ValidationError("قیمت هر سرویس نمی‌تواند مقدار منفی داشته باشد.")
         return value
 
+
     def update(self, instance, validated_data):
         return super().update(instance, validated_data)
+    
+
+    def create(self, validated_data):
+
+        category_slug = self.context.get('category_slug')
+
+        if not category_slug:
+            raise ValidationError('category is required')
+        
+        category = IndustryCategory.objects.get(slug=category_slug)
+        
+        slug = slugify(value=validated_data['name'], allow_unicode=True)
+
+        industry = Industry.objects.create(
+            slug=slug,
+            category=category,
+            name=validated_data['name'],
+            icon=validated_data['icon'],
+            price_per_service=validated_data['price_per_service'],
+        )
+        
+        industry.save()
+
+        return industry
