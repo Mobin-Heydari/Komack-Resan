@@ -108,7 +108,7 @@ class ServiceRecipientProfile(models.Model):
 
 
 
-class ServiceAdminProfile(models.Model):
+class AdminProfile(models.Model):
 
     class GenderChoices(models.TextChoices):
         WOMEN = 'W', 'خانوم'
@@ -158,7 +158,7 @@ class ServiceAdminProfile(models.Model):
     
 
 
-class ServiceSupportProfile(models.Model):
+class SupportProfile(models.Model):
 
     class GenderChoices(models.TextChoices):
         WOMEN = 'W', 'خانوم'

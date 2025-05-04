@@ -3,8 +3,8 @@ from rest_framework.exceptions import PermissionDenied
 from .models import (
     ServiceProviderProfile,
     ServiceRecipientProfile,
-    ServiceAdminProfile,
-    ServiceSupportProfile
+    AdminProfile,
+    SupportProfile
 )
 
 
@@ -51,9 +51,9 @@ class ServiceRecipientProfileSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class ServiceAdminProfileSerializer(serializers.ModelSerializer):
+class AdminProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ServiceAdminProfile
+        model = AdminProfile
         fields = '__all__'
         read_only_fields = ('user', 'created_at', 'updated_at')
 
@@ -71,9 +71,9 @@ class ServiceAdminProfileSerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
 
 
-class ServiceSupportProfileSerializer(serializers.ModelSerializer):
+class SupportProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ServiceSupportProfile
+        model = SupportProfile
         fields = '__all__'
         read_only_fields = ('user', 'created_at', 'updated_at')
 
