@@ -37,7 +37,7 @@ class IndustrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Industry
         fields = '__all__'
-        read_only_fields = ('slug',)
+        read_only_fields = ('slug', 'category',)
 
     def validate_price_per_service(self, value):
         if value < 0:
@@ -46,7 +46,12 @@ class IndustrySerializer(serializers.ModelSerializer):
 
 
     def update(self, instance, validated_data):
+        category_slug = self.context.get('category_slug')
+        if category_slug:
+            category = IndustryCategory.objects.get(slug=category_slug)
+            validated_data['category'] = category
         return super().update(instance, validated_data)
+
     
 
     def create(self, validated_data):

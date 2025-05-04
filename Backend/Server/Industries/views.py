@@ -81,30 +81,35 @@ class IndustryViewSet(viewsets.ViewSet):
     def create(self, request, category_slug, *args, **kwargs):
         if request.user.is_staff:
             category = get_object_or_404(IndustryCategory, slug=category_slug)
-            if category:
-                serializer = IndustrySerializer(
-                    data=request.data,
-                    context={'request': request, 'category_slug': category_slug}
-                )
-                if serializer.is_valid():
-                    serializer.save()
-                    return Response(serializer.data, status=status.HTTP_201_CREATED)
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response(
-                    {"error": "دسته‌بندی الزامی است."},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            serializer = IndustrySerializer(
+                data=request.data,
+                context={'request': request, 'category_slug': category.slug}
+            )
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(
                 {"error": "شما اجازه ایجاد این محتوا را ندارید."},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-    def update(self, request, slug, category_slug, *args, **kwargs):
+    def update(self, request, slug, category_slug=None, *args, **kwargs):
         if request.user.is_staff:
             industry = get_object_or_404(Industry, slug=slug)
-            serializer = IndustrySerializer(industry, data=request.data, context={'request': request})
+            
+            category = industry.category
+            
+            if category_slug:
+                category = get_object_or_404(IndustryCategory, slug=category_slug)
+
+            serializer = IndustrySerializer(
+                industry, 
+                data=request.data, 
+                context={'request': request, 'category_slug': category.slug}
+            )
+
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
@@ -114,6 +119,7 @@ class IndustryViewSet(viewsets.ViewSet):
                 {"error": "شما اجازه ویرایش این محتوا را ندارید."},
                 status=status.HTTP_403_FORBIDDEN
             )
+
 
     def destroy(self, request, slug, *args, **kwargs):
         if request.user.is_staff:
