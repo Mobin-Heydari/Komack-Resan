@@ -1,3 +1,9 @@
 from django.contrib import admin
+from .models import ServiceScore
 
-# Register your models here.
+
+@admin.register(ServiceScore)
+class ServiceScoreAdmin(admin.ModelAdmin):
+    list_display = ('service', 'quality', 'behavior', 'time', 'overall', 'created_at')
+    search_fields = ('service__title',)
+    readonly_fields = ('overall', 'created_at')
