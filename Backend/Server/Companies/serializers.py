@@ -75,3 +75,21 @@ class CompanySerializer(serializers.ModelSerializer):
         if obj.intro_video:
             return f"{get_full_host()}{obj.intro_video.url}"
         return None
+
+
+class CompanyEmployeeSerializer(serializers.ModelSerializer):
+
+    company = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='name'
+    )
+    
+    employee = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='full_name'
+    )
+
+    class Meta:
+        model = CompanyEmployee
+        fields = ['id', 'company', 'employee', 'position', 'created_at', 'updated_at']
+        read_only_fields = ('company', 'employee', 'created_at')
