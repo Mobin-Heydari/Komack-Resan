@@ -15,7 +15,7 @@ def get_full_host():
     return settings.ALLOWED_HOSTS[0]
 
 
-class FirstItemSerializers(serializers.ModelSerializer):
+class FirstItemSerializer(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()
 
     class Meta:
@@ -28,7 +28,7 @@ class FirstItemSerializers(serializers.ModelSerializer):
         return None
 
 
-class SecondItemSerializers(serializers.ModelSerializer):
+class SecondItemSerializer(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()
 
     class Meta:
@@ -109,6 +109,23 @@ class WorkDaySerializer(serializers.ModelSerializer):
                 return True
 
         return False
+    
+
+class CompanyFirstItemSerializer(serializers.ModelSerializer):
+    first_item = FirstItemSerializer(read_only=True)
+
+    class Meta:
+        model = CompanyFirstItem
+        fields = "__all__"
+
+
+# Nested serializer for the company's second item:
+class CompanySecondItemSerializer(serializers.ModelSerializer):
+    second_item = SecondItemSerializer(read_only=True)
+
+    class Meta:
+        model = CompanySecondItem
+        fields = "__all__"
 
     
 class CompanySerializer(serializers.ModelSerializer):
@@ -118,6 +135,8 @@ class CompanySerializer(serializers.ModelSerializer):
     validation_status = CompanyValidationStatusSerializer(read_only=True)
     # Include workdays as a nested representation.
     workdays = WorkDaySerializer(many=True, read_only=True)
+    companies_first_item = CompanyFirstItemSerializer(many=True, read_only=True)
+    companies_second_item = CompanySecondItemSerializer(many=True, read_only=True)
 
     class Meta:
         model = Company
