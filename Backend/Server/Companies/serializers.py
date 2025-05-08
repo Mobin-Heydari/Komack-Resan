@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.db import transaction
 
 from rest_framework import serializers
 
@@ -133,15 +134,16 @@ class CompanySerializer(serializers.ModelSerializer):
     banner = serializers.SerializerMethodField()
     intro_video = serializers.SerializerMethodField()
     validation_status = CompanyValidationStatusSerializer(read_only=True)
-    # Include workdays as a nested representation.
     workdays = WorkDaySerializer(many=True, read_only=True)
     companies_first_item = CompanyFirstItemSerializer(many=True, read_only=True)
     companies_second_item = CompanySecondItemSerializer(many=True, read_only=True)
+    # Use a write-only field for industry identification
+    industry_slug = serializers.CharField(write_only=True, help_text="The slug representing the industry.")
 
     class Meta:
         model = Company
         fields = "__all__"
-        read_only_fields = ('employer',)
+        read_only_fields = ('employer', 'industry')  # employer is set based on the request user
 
     def get_logo(self, obj):
         if obj.logo:
@@ -157,6 +159,71 @@ class CompanySerializer(serializers.ModelSerializer):
         if obj.intro_video:
             return f"{get_full_host()}{obj.intro_video.url}"
         return None
+
+    def validate_industry_slug(self, value):
+        """Ensure that the provided industry exists."""
+        if not Industry.objects.filter(slug=value).exists():
+            raise serializers.ValidationError("The specified industry does not exist.")
+        return value
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        employer = request.user if request else None
+
+        # Prevent duplicate companies for the same employer.
+        if employer and Company.objects.filter(employer=employer, name=attrs.get('name')).exists():
+            raise serializers.ValidationError("A company with this name already exists for you.")
+        return attrs
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        employer = request.user
+
+        # Remove industry_slug and fetch the actual Industry instance
+        industry_slug = validated_data.pop('industry_slug')
+        industry = Industry.objects.get(slug=industry_slug)
+
+        # Generate a slug for the company based on its name.
+        generated_slug = slugify(validated_data.get('name'), allow_unicode=True)
+        validated_data['slug'] = generated_slug
+
+        # Force the is_validated field: only admin can set it.
+        if not request.user.is_staff:
+            # Owners (or any non-admins) cannot override is_validated at creation.
+            validated_data['is_validated'] = False
+
+        # Create the company and its related validation status atomically.
+        with transaction.atomic():
+            company = Company.objects.create(
+                employer=employer,
+                industry=industry,
+                **validated_data
+            )
+            CompanyValidationStatus.objects.create(company=company)
+        return company
+
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+
+        # If industry_slug is provided, update the company’s industry.
+        industry_slug = validated_data.pop('industry_slug', None)
+        if industry_slug:
+            industry = Industry.objects.get(slug=industry_slug)
+            validated_data['industry'] = industry
+
+        # Prevent non-admin users from updating the is_validated field.
+        if not request.user.is_staff and 'is_validated' in validated_data:
+            validated_data.pop('is_validated')
+
+        # Optionally, if the name is updated, regenerate the slug.
+        if 'name' in validated_data:
+            validated_data['slug'] = slugify(validated_data['name'], allow_unicode=True)
+
+        # Update instance fields.
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
 
 
 class CompanyEmployeeSerializer(serializers.ModelSerializer):
