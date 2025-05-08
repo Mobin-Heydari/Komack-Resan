@@ -8,4 +8,5 @@ urlpatterns = [
     path('users/', include('Users.urls', namespace='Users')),
     path('profiles/', include('Profiles.urls', namespace='Profiles')),
     path('industries/', include('Industries.urls', namespace='Industries')),
+    path('companies/', include('Companies.urls', namespace='Companies')),
 ]
