@@ -279,7 +279,8 @@ class CompanyValidationStatus(models.Model):
     
     business_license = models.FileField(
         upload_to="Companies/Validations/",
-        verbose_name="جواز کسب"
+        verbose_name="جواز کسب",
+        null=True, blank=True
     )
 
     business_license_status = models.BooleanField(
