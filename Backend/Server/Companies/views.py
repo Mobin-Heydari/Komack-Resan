@@ -7,6 +7,7 @@ from .models import(
     FirstItem,
     SecondItem,
     CompanyFirstItem,
+    CompanySecondItem,
     CompanyValidationStatus,
 )
 from .serializers import(
@@ -14,6 +15,7 @@ from .serializers import(
     FirstItemSerializer,
     SecondItemSerializer,
     CompanyFirstItemSerializer,
+    CompanySecondItemSerializer,
     CompanyValidationStatusSerializer,
 )
 from .permissions import (
@@ -340,5 +342,72 @@ class CompanyFirstItemViewSet(viewsets.ViewSet):
         instance.delete()
         return Response(
             {'message': 'Company first item deleted successfully.'},
+            status=status.HTTP_204_NO_CONTENT
+        )
+    
+
+
+class CompanySecondItemViewSet(viewsets.ViewSet):
+    """
+    A ViewSet for managing CompanySecondItem instances.
+    
+    Endpoints:
+      - List:      GET /company-second-items/
+      - Create:    POST /company-second-items/create/
+      - Retrieve:  GET /company-second-items/<slug:slug>/
+      - Update:    PUT/PATCH /company-second-items/<slug:slug>/update/
+      - Delete:    DELETE /company-second-items/<slug:slug>/delete/
+    
+    Access for create, update, and delete is restricted to admins or the company’s employer.
+    """
+    permission_classes = [IsAdminOrCompanyEmployer]
+
+    def list(self, request):
+        queryset = CompanySecondItem.objects.all()
+        serializer = CompanySecondItemSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, slug):
+        instance = get_object_or_404(CompanySecondItem, slug=slug)
+        self.check_object_permissions(request, instance)
+        serializer = CompanySecondItemSerializer(instance, context={'request': request})
+        return Response(serializer.data)
+
+    def create(self, request):
+        serializer = CompanySecondItemSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            instance = serializer.save()
+            response_serializer = CompanySecondItemSerializer(instance, context={'request': request})
+            return Response(
+                {
+                    'message': 'Company second item created successfully.',
+                    'data': response_serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, slug):
+        instance = get_object_or_404(CompanySecondItem, slug=slug)
+        self.check_object_permissions(request, instance)
+        serializer = CompanySecondItemSerializer(instance, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            instance = serializer.save()
+            response_serializer = CompanySecondItemSerializer(instance, context={'request': request})
+            return Response(
+                {
+                    'message': 'Company second item updated successfully.',
+                    'data': response_serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, slug):
+        instance = get_object_or_404(CompanySecondItem, slug=slug)
+        self.check_object_permissions(request, instance)
+        instance.delete()
+        return Response(
+            {'message': 'Company second item deleted successfully.'},
             status=status.HTTP_204_NO_CONTENT
         )
