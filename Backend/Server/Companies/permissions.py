@@ -35,3 +35,16 @@ class IsAdminOrReadOnly(BasePermission):
         if request.method in SAFE_METHODS:
             return True  # Allow read actions for everyone
         return request.user and request.user.is_authenticated and request.user.is_staff
+
+
+# Permission for list action: only admin (is_staff) can list.
+class IsAdminOnly(BasePermission):
+    def has_permission(self, request, view):
+        return request.user and request.user.is_staff
+    
+
+# Permission for retrieve and update: only admin or the company's employer may access.
+class IsAdminOrEmployer(BasePermission):
+    def has_object_permission(self, request, view, obj):
+        # obj is a CompanyValidationStatus instance; check that its related company.employer
+        return request.user and (request.user.is_staff or obj.company.employer == request.user)
