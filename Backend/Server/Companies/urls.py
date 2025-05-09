@@ -3,7 +3,9 @@ from .routers import (
     CompanyRouter,
     FirstItemRouter,
     SecondItemRouter,
-    CompanyValidationStatusRouter
+    CompanyFirstItemRouter,
+    CompanySecondItemRouter,
+    CompanyValidationStatusRouter,
 )
 
 
@@ -15,6 +17,8 @@ company_router = CompanyRouter()
 first_item_router = FirstItemRouter()
 second_item_router = SecondItemRouter()
 company_validation_router = CompanyValidationStatusRouter()
+company_first_item_router = CompanyFirstItemRouter()
+company_second_item_router = CompanySecondItemRouter()
 
 
 urlpatterns = [
@@ -22,4 +26,6 @@ urlpatterns = [
     path('first-item/', include(first_item_router.get_urls())),
     path('second-item/', include(second_item_router.get_urls())),
     path('validation-status/', include(company_validation_router.get_urls())),
+    path('company-firts-item/', include(company_first_item_router.get_urls())),
+    path('company-second-item/', include(company_second_item_router.get_urls())),
 ]

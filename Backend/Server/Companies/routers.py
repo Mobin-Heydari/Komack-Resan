@@ -87,6 +87,7 @@ class FirstItemRouter(routers.DefaultRouter):
         return default_urls + custom_urls
 
 
+
 class SecondItemRouter(routers.DefaultRouter):
     """
     Custom router for SecondItemViewSet.
@@ -157,6 +158,88 @@ class CompanyValidationStatusRouter(routers.DefaultRouter):
         ]
         return default_urls + custom_urls
 
-# Instantiate and expose the URLs.
-router = CompanyValidationStatusRouter()
-urlpatterns = router.urls
+
+
+class CompanyFirstItemRouter(routers.DefaultRouter):
+    """
+    Custom router for CompanyFirstItemViewSet.
+    
+    Endpoints:
+      - List:       GET /company-first-items/
+      - Create:     POST /company-first-items/create/
+      - Retrieve:   GET /company-first-items/<slug:slug>/
+      - Update:     PUT/PATCH /company-first-items/<slug:slug>/update/
+      - Delete:     DELETE /company-first-items/<slug:slug>/delete/
+    """
+    def __init__(self):
+        super().__init__()
+        # Register the viewset with an empty prefix.
+        self.register(r'', views.CompanyFirstItemViewSet, basename='company_first_item')
+
+    def get_urls(self):
+        default_urls = super().get_urls()
+        custom_urls = [
+            path('', include([
+                # List route
+                path('', views.CompanyFirstItemViewSet.as_view({'get': 'list'}), name='company-first-item-list'),
+                # Create route
+                path('create/', views.CompanyFirstItemViewSet.as_view({'post': 'create'}), name='company-first-item-create'),
+                # Detail routes (retrieve, update, delete) using the item slug.
+                path('<slug:slug>/', include([
+                    path(
+                        '',
+                        views.CompanyFirstItemViewSet.as_view({
+                            'get': 'retrieve',
+                            'put': 'update',
+                            'patch': 'update',
+                            'delete': 'destroy'
+                        }),
+                        name='company-first-item-detail'
+                    ),
+                ])),
+            ])),
+        ]
+        return default_urls + custom_urls
+
+
+
+class CompanySecondItemRouter(routers.DefaultRouter):
+    """
+    Custom router for CompanySecondItemViewSet.
+    
+    Endpoints:
+      - List:       GET /company-second-items/
+      - Create:     POST /company-second-items/create/
+      - Retrieve:   GET /company-second-items/<slug:slug>/
+      - Update:     PUT/PATCH /company-second-items/<slug:slug>/update/
+      - Delete:     DELETE /company-second-items/<slug:slug>/delete/
+    """
+    def __init__(self):
+        super().__init__()
+        self.register(r'', views.CompanySecondItemViewSet, basename='company_second_item')
+
+    def get_urls(self):
+        default_urls = super().get_urls()
+        custom_urls = [
+            path('', include([
+                # List route
+                path('', views.CompanySecondItemViewSet.as_view({'get': 'list'}), name='company-second-item-list'),
+                # Create route
+                path('create/', views.CompanySecondItemViewSet.as_view({'post': 'create'}), name='company-second-item-create'),
+                # Detail routes (retrieve, update, delete) using the item slug.
+                path('<slug:slug>/', include([
+                    path(
+                        '',
+                        views.CompanySecondItemViewSet.as_view({
+                            'get': 'retrieve',
+                            'put': 'update',
+                            'patch': 'update',
+                            'delete': 'destroy'
+                        }),
+                        name='company-second-item-detail'
+                    ),
+                ])),
+            ])),
+        ]
+        return default_urls + custom_urls
+
