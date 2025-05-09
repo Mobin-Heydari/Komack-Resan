@@ -106,6 +106,78 @@ class CompanyValidationStatusSerializer(serializers.ModelSerializer):
         if obj.validated_by:
             return getattr(obj.validated_by, "full_name", str(obj.validated_by))
         return None
+    
+
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+        
+        if request.user.is_staff:
+            # Admin branch: update overall_status and related fields.
+            overall_status = validated_data.get('overall_status', instance.overall_status)
+
+            if overall_status == CompanyValidationStatus.ValidationStatus.APPROVED:
+                instance.validated_by = request.user
+                # Use the model's method to mark as validated.
+                instance.mark_as_validated()
+                # Update the associated company as validated.
+                company = instance.company
+                company.is_validated = True
+                company.save()
+
+            elif overall_status == CompanyValidationStatus.ValidationStatus.REJECTED:
+                if not validated_data.get('validation_notes'):
+                    raise serializers.ValidationError(
+                        "Validation notes must be provided when rejecting a company."
+                    )
+                instance.overall_status = overall_status
+                # Mark the company as not validated.
+                company = instance.company
+                company.is_validated = False
+                company.save()
+
+            else:
+                # For pending or other statuses, update the overall_status directly.
+                instance.overall_status = overall_status
+
+            # Admins can update these fields.
+            instance.business_license = validated_data.get(
+                'business_license', instance.business_license
+            )
+            instance.business_license_status = validated_data.get(
+                'business_license_status', instance.business_license_status
+            )
+            instance.validation_notes = validated_data.get(
+                'validation_notes', instance.validation_notes
+            )
+            instance.save()
+            return instance
+        
+        else:
+            # Non-admin (company owner) branch.
+            # Enforce that only the company employer can update the business license.
+            if request.user != instance.company.employer:
+                raise serializers.ValidationError("Only the company employer can update the business license.")
+            
+            # Allow update only when overall_status is either pending or rejected.
+            allowed_statuses = [
+                CompanyValidationStatus.ValidationStatus.PENDING,
+                CompanyValidationStatus.ValidationStatus.REJECTED,
+            ]
+            if instance.overall_status not in allowed_statuses:
+                raise serializers.ValidationError("You may update the business license only if the status is Pending or Rejected.")
+
+            # Prevent any update to forbidden fields.
+            forbidden_fields = ['overall_status', 'business_license_status', 'validation_notes']
+            for field in forbidden_fields:
+                if field in validated_data:
+                    raise serializers.ValidationError({field: "You are not authorized to update this field."})
+            
+            # Allow the employer to update the business_license.
+            if 'business_license' in validated_data:
+                instance.business_license = validated_data['business_license']
+            
+            instance.save()
+            return instance
 
 
 
