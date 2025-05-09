@@ -178,107 +178,115 @@ class CompanyValidationStatusSerializer(serializers.ModelSerializer):
             return instance
 
 
+
 class WorkDaySerializer(serializers.ModelSerializer):
     # Returns the human-readable day-of-week (e.g., "دوشنبه")
-    day_of_week_display = serializers.CharField(source='get_day_of_week_display', read_only=True)
-    # Returns the working hours string, e.g., "09:00 - 17:00" or "Closed"
+    day_of_week_display = serializers.CharField(source="get_day_of_week_display", read_only=True)
+    # Returns the working hours string using the model’s time_range property.
     time_range = serializers.SerializerMethodField()
-    # Returns True if the company is open for this day at the current time; False otherwise.
+    # Returns True if the workday is currently active for the company.
     is_open_now = serializers.SerializerMethodField()
+    # Accept the company slug (write-only) to identify the company during creation.
+    company_slug = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = WorkDay
         fields = [
-            'company',
-            'day_of_week',
-            'day_of_week_display',
-            'open_time',
-            'close_time',
-            'is_closed',
-            'time_range',
-            'is_open_now'
+            "company",
+            "company_slug",
+            "day_of_week",
+            "day_of_week_display",
+            "open_time",
+            "close_time",
+            "is_closed",
+            "time_range",
+            "is_open_now",
         ]
+        read_only_fields = ("company",)
 
     def get_time_range(self, obj):
-        # Leverage the model’s time_range property
         return obj.time_range
 
     def get_is_open_now(self, obj):
-        """
-        Determines if the company is currently open for this workday.
-        The method:
-          1. Gets the current local time.
-          2. Gets the current day name in lowercase.
-          3. Checks if the current day matches the workday carried by this serializer record.
-          4. If the day matches, and the workday isn’t marked as closed,
-             it checks if the current time falls within the open and close times.
-        """
         now = datetime.datetime.now().time()
-        # Determine the current day (e.g., 'monday', 'tuesday', etc.)
-        current_day = datetime.datetime.today().strftime('%A').lower()
-
-        # If the workday does not correspond to today, it's not open now.
+        current_day = datetime.datetime.today().strftime("%A").lower()
         if obj.day_of_week != current_day:
             return False
-
-        # If the day is marked as closed, the company is closed.
         if obj.is_closed:
             return False
-
-        # Check if open_time and close_time are provided and then whether the current time is within them.
-        if obj.open_time and obj.close_time:
-            if obj.open_time <= now <= obj.close_time:
-                return True
-
+        if obj.open_time and obj.close_time and (obj.open_time <= now <= obj.close_time):
+            return True
         return False
-    
+
     def validate(self, attrs):
         """
-        Enforce that the combination of company and day_of_week is unique,
-        so that only days that aren't already created will be allowed.
+        For create: Remove company_slug and fetch the actual Company instance.
+        For update: Prevent changing company by comparing provided slug with the current company.
+        Also, enforce uniqueness of (company, day_of_week) across records.
         """
-        company = attrs.get('company')
-        day_of_week = attrs.get('day_of_week')
+        # Creation
+        if not self.instance:
+            # Get company_slug from validated_data.
+            company_slug = attrs.pop("company_slug")
+            try:
+                company = Company.objects.get(slug=company_slug)
+            except Company.DoesNotExist:
+                raise serializers.ValidationError({
+                    "company_slug": "No company with this slug exists."
+                })
+            attrs["company"] = company
+        else:
+            # Update: Company cannot change.
+            if "company_slug" in attrs:
+                if attrs["company_slug"] != self.instance.company.slug:
+                    raise serializers.ValidationError({
+                        "company_slug": "Company cannot be changed on update."
+                    })
+            attrs["company"] = self.instance.company
 
-        # If we're creating a new instance.
+        # Ensure that only one WorkDay exists for the given company and day_of_week.
+        company = attrs["company"]
+        # Use provided day_of_week (or fall back to the instance value during update).
+        day_of_week = attrs.get("day_of_week", self.instance.day_of_week if self.instance else None)
         if not self.instance:
             if WorkDay.objects.filter(company=company, day_of_week=day_of_week).exists():
-                raise serializers.ValidationError(
-                    {"day_of_week": "A workday for this day and company already exists."}
-                )
+                raise serializers.ValidationError({
+                    "day_of_week": "A workday for this day and company already exists."
+                })
         else:
-            # For updates, exclude the current instance.
-            qs = WorkDay.objects.filter(company=company, day_of_week=day_of_week)
-            if qs.exclude(pk=self.instance.pk).exists():
-                raise serializers.ValidationError(
-                    {"day_of_week": "A workday for this day and company already exists."}
-                )
+            qs = WorkDay.objects.filter(company=company, day_of_week=day_of_week).exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise serializers.ValidationError({
+                    "day_of_week": "A workday for this day and company already exists."
+                })
+
         return attrs
-    
+
     def create(self, validated_data):
         """
         Create a new WorkDay instance.
-        Performs model-level validations via full_clean() before saving.
+        The structure is similar to the industry example:
+          - Remove company_slug (already popped in validation) and fetch the actual Company instance.
+          - Run model-level validations via full_clean().
         """
-        # Use a transaction to ensure atomicity.
         with transaction.atomic():
             instance = WorkDay(**validated_data)
-            # Perform model-level validation (i.e., the clean() method is called).
             instance.full_clean()
             instance.save()
         return instance
 
     def update(self, instance, validated_data):
         """
-        Update and return an existing WorkDay instance.
-        Calls full_clean() to enforce model validations after setting new field values.
+        Update the WorkDay instance. Disallows changes to the company.
         """
+        # Remove company_slug if present.
+        validated_data.pop("company_slug", None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        # Validate the updated instance.
         instance.full_clean()
         instance.save()
         return instance
+
 
 
 class CompanyFirstItemSerializer(serializers.ModelSerializer):
