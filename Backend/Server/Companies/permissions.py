@@ -24,3 +24,14 @@ class IsAdminOrOwner(BasePermission):
 
         # For unsafe methods, allow access if the user is an admin or is the employer (owner) of the company.
         return request.user.is_staff or obj.employer == request.user
+
+
+class IsAdminOrReadOnly(BasePermission):
+    """
+    Custom permission that allows only admin users to create, update, or delete items.
+    Read operations (GET, HEAD, OPTIONS) are permitted for all users.
+    """
+    def has_permission(self, request, view):
+        if request.method in SAFE_METHODS:
+            return True  # Allow read actions for everyone
+        return request.user and request.user.is_authenticated and request.user.is_staff
