@@ -4,6 +4,7 @@ from rest_framework.response import Response
 
 from .models import(
     Company,
+    WorkDay,
     FirstItem,
     SecondItem,
     CompanyFirstItem,
@@ -12,6 +13,7 @@ from .models import(
 )
 from .serializers import(
     CompanySerializer,
+    WorkDaySerializer,
     FirstItemSerializer,
     SecondItemSerializer,
     CompanyFirstItemSerializer,
@@ -409,5 +411,75 @@ class CompanySecondItemViewSet(viewsets.ViewSet):
         instance.delete()
         return Response(
             {'message': 'Company second item deleted successfully.'},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+
+
+class WorkDayViewSet(viewsets.ViewSet):
+    """
+    A ViewSet for managing WorkDay records.
+    
+    Endpoints:
+      - List:      GET /workdays/
+      - Create:    POST /workdays/create/
+      - Retrieve:  GET /workdays/<pk>/
+      - Update:    PUT/PATCH /workdays/<pk>/update/
+      - Delete:    DELETE /workdays/<pk>/delete/
+    
+    Note:
+      - The company association must be provided on create via company_slug,
+        and cannot be changed on update.
+      - The permission class ensures that only admins or the company employer can perform write operations.
+    """
+    permission_classes = [IsAdminOrCompanyEmployer]
+
+    def list(self, request):
+        queryset = WorkDay.objects.all()
+        serializer = WorkDaySerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        workday = get_object_or_404(WorkDay, pk=pk)
+        self.check_object_permissions(request, workday)
+        serializer = WorkDaySerializer(workday, context={'request': request})
+        return Response(serializer.data)
+
+    def create(self, request):
+        serializer = WorkDaySerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            workday = serializer.save()
+            response_serializer = WorkDaySerializer(workday, context={'request': request})
+            return Response(
+                {
+                    'message': 'Workday created successfully.',
+                    'data': response_serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, pk=None):
+        workday = get_object_or_404(WorkDay, pk=pk)
+        self.check_object_permissions(request, workday)
+        serializer = WorkDaySerializer(workday, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            workday = serializer.save()
+            response_serializer = WorkDaySerializer(workday, context={'request': request})
+            return Response(
+                {
+                    'message': 'Workday updated successfully.',
+                    'data': response_serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        workday = get_object_or_404(WorkDay, pk=pk)
+        self.check_object_permissions(request, workday)
+        workday.delete()
+        return Response(
+            {'message': 'Workday deleted successfully.'},
             status=status.HTTP_204_NO_CONTENT
         )
