@@ -1,7 +1,4 @@
-from django.db import transaction
 from django.shortcuts import get_object_or_404
-from django.utils.text import slugify
-
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
@@ -9,19 +6,22 @@ from .models import(
     Company,
     FirstItem,
     SecondItem,
+    CompanyFirstItem,
     CompanyValidationStatus,
 )
 from .serializers import(
     CompanySerializer,
     FirstItemSerializer,
     SecondItemSerializer,
+    CompanyFirstItemSerializer,
     CompanyValidationStatusSerializer,
 )
 from .permissions import (
+    IsAdminOnly,
     IsAdminOrOwner,
     IsAdminOrReadOnly,
     IsAdminOrEmployer,
-    IsAdminOnly,
+    IsAdminOrCompanyEmployer,
 )
 
 
@@ -112,7 +112,6 @@ class CompanyViewSet(viewsets.ViewSet):
 
 
 
-
 class FirstItemViewSet(viewsets.ViewSet):
     """
     A ViewSet for managing FirstItem instances.
@@ -170,7 +169,6 @@ class FirstItemViewSet(viewsets.ViewSet):
             {'message': 'FirstItem deleted successfully.'},
             status=status.HTTP_204_NO_CONTENT
         )
-
 
 
 
@@ -234,7 +232,6 @@ class SecondItemViewSet(viewsets.ViewSet):
 
 
 
-
 class CompanyValidationStatusViewSet(viewsets.ViewSet):
     """
     A viewset for listing, retrieving, and updating CompanyValidationStatus instances.
@@ -278,3 +275,70 @@ class CompanyValidationStatusViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class CompanyFirstItemViewSet(viewsets.ViewSet):
+    """
+    A ViewSet for managing CompanyFirstItem instances.
+    
+    Endpoints:
+      - List:      GET /company-first-items/
+      - Create:    POST /company-first-items/create/
+      - Retrieve:  GET /company-first-items/<slug:slug>/
+      - Update:    PUT/PATCH /company-first-items/<slug:slug>/update/
+      - Delete:    DELETE /company-first-items/<slug:slug>/delete/
+    
+    Access for write actions (create, update, delete) is restricted to admins or the company’s employer.
+    """
+    permission_classes = [IsAdminOrCompanyEmployer]
+
+    def list(self, request):
+        queryset = CompanyFirstItem.objects.all()
+        serializer = CompanyFirstItemSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, slug):
+        instance = get_object_or_404(CompanyFirstItem, slug=slug)
+        self.check_object_permissions(request, instance)
+        serializer = CompanyFirstItemSerializer(instance, context={'request': request})
+        return Response(serializer.data)
+
+    def create(self, request):
+        serializer = CompanyFirstItemSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            instance = serializer.save()
+            response_serializer = CompanyFirstItemSerializer(instance, context={'request': request})
+            return Response(
+                {
+                    'message': 'Company first item created successfully.',
+                    'data': response_serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, slug):
+        instance = get_object_or_404(CompanyFirstItem, slug=slug)
+        self.check_object_permissions(request, instance)
+        serializer = CompanyFirstItemSerializer(instance, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            instance = serializer.save()
+            response_serializer = CompanyFirstItemSerializer(instance, context={'request': request})
+            return Response(
+                {
+                    'message': 'Company first item updated successfully.',
+                    'data': response_serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, slug):
+        instance = get_object_or_404(CompanyFirstItem, slug=slug)
+        self.check_object_permissions(request, instance)
+        instance.delete()
+        return Response(
+            {'message': 'Company first item deleted successfully.'},
+            status=status.HTTP_204_NO_CONTENT
+        )
