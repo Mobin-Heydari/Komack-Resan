@@ -9,13 +9,20 @@ from .models import(
     Company,
     FirstItem,
     SecondItem,
+    CompanyValidationStatus,
 )
 from .serializers import(
     CompanySerializer,
     FirstItemSerializer,
     SecondItemSerializer,
+    CompanyValidationStatusSerializer,
 )
-from .permissions import IsAdminOrOwner, IsAdminOrReadOnly
+from .permissions import (
+    IsAdminOrOwner,
+    IsAdminOrReadOnly,
+    IsAdminOrEmployer,
+    IsAdminOnly,
+)
 
 
 
@@ -224,3 +231,50 @@ class SecondItemViewSet(viewsets.ViewSet):
             {'message': 'SecondItem deleted successfully.'},
             status=status.HTTP_204_NO_CONTENT
         )
+
+
+
+
+class CompanyValidationStatusViewSet(viewsets.ViewSet):
+    """
+    A viewset for listing, retrieving, and updating CompanyValidationStatus instances.
+    
+    - List: Accessible only by admin; returns all statuses.
+    - Retrieve/Update: Accessible by admin or the company employer.
+    """
+    def get_queryset(self):
+        return CompanyValidationStatus.objects.all()
+
+    def get_permissions(self):
+        if self.action == 'list':
+            # Only admin can list.
+            return [IsAdminOnly()]
+        elif self.action in ['retrieve', 'update']:
+            # For detail and update, allow admin or company owner.
+            return [IsAdminOrEmployer()]
+        return []
+
+    def list(self, request):
+        queryset = self.get_queryset()
+        serializer = CompanyValidationStatusSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, pk=None):
+        instance = get_object_or_404(CompanyValidationStatus, pk=pk)
+        self.check_object_permissions(request, instance)
+        serializer = CompanyValidationStatusSerializer(instance, context={'request': request})
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        instance = get_object_or_404(CompanyValidationStatus, pk=pk)
+        self.check_object_permissions(request, instance)
+        serializer = CompanyValidationStatusSerializer(
+            instance,
+            data=request.data,
+            partial=True,
+            context={'request': request}
+        )
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
