@@ -231,6 +231,54 @@ class WorkDaySerializer(serializers.ModelSerializer):
                 return True
 
         return False
+    
+    def validate(self, attrs):
+        """
+        Enforce that the combination of company and day_of_week is unique,
+        so that only days that aren't already created will be allowed.
+        """
+        company = attrs.get('company')
+        day_of_week = attrs.get('day_of_week')
+
+        # If we're creating a new instance.
+        if not self.instance:
+            if WorkDay.objects.filter(company=company, day_of_week=day_of_week).exists():
+                raise serializers.ValidationError(
+                    {"day_of_week": "A workday for this day and company already exists."}
+                )
+        else:
+            # For updates, exclude the current instance.
+            qs = WorkDay.objects.filter(company=company, day_of_week=day_of_week)
+            if qs.exclude(pk=self.instance.pk).exists():
+                raise serializers.ValidationError(
+                    {"day_of_week": "A workday for this day and company already exists."}
+                )
+        return attrs
+    
+    def create(self, validated_data):
+        """
+        Create a new WorkDay instance.
+        Performs model-level validations via full_clean() before saving.
+        """
+        # Use a transaction to ensure atomicity.
+        with transaction.atomic():
+            instance = WorkDay(**validated_data)
+            # Perform model-level validation (i.e., the clean() method is called).
+            instance.full_clean()
+            instance.save()
+        return instance
+
+    def update(self, instance, validated_data):
+        """
+        Update and return an existing WorkDay instance.
+        Calls full_clean() to enforce model validations after setting new field values.
+        """
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        # Validate the updated instance.
+        instance.full_clean()
+        instance.save()
+        return instance
 
 
 class CompanyFirstItemSerializer(serializers.ModelSerializer):
