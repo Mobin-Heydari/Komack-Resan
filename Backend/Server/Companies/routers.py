@@ -124,3 +124,39 @@ class SecondItemRouter(routers.DefaultRouter):
         ]
         return default_urls + custom_urls
 
+
+
+class CompanyValidationStatusRouter(routers.DefaultRouter):
+    """
+    Custom router for CompanyValidationStatusViewSet.
+    
+    Endpoints:
+      - List:    GET /company-validation-status/
+      - Detail:  GET /company-validation-status/<pk>/
+      - Update:  PUT/PATCH /company-validation-status/<pk>/
+    """
+    def __init__(self):
+        super().__init__()
+        # Register the viewset with an empty prefix to allow custom routes
+        self.register(r'', views.CompanyValidationStatusViewSet, basename='company_validation_status')
+
+    def get_urls(self):
+        default_urls = super().get_urls()
+        custom_urls = [
+            path('', include([
+                # List route: GET /company-validation-status/
+                path('', views.CompanyValidationStatusViewSet.as_view({'get': 'list'}),
+                     name='company_validation_status-list'),
+                # Detail route: Retrieve and Update using the record PK.
+                path('<int:pk>/', views.CompanyValidationStatusViewSet.as_view({
+                    'get': 'retrieve',
+                    'put': 'update',
+                    'patch': 'update'
+                }), name='company_validation_status-detail'),
+            ])),
+        ]
+        return default_urls + custom_urls
+
+# Instantiate and expose the URLs.
+router = CompanyValidationStatusRouter()
+urlpatterns = router.urls
