@@ -27,6 +27,33 @@ class FirstItemSerializer(serializers.ModelSerializer):
         if obj.icon:
             return f"{get_full_host()}{obj.icon.url}"
         return None
+    
+
+    def create(self, validated_data):
+        # Generate a slug for the first_item based on its name.
+        generated_slug = slugify(validated_data.get('name'), allow_unicode=True)
+        validated_data['slug'] = generated_slug
+
+        # Create the first_item and its related validation status atomically.
+        with transaction.atomic():
+            first_item = FirstItem.objects.create(**validated_data)
+        
+        return first_item
+    
+
+    def update(self, instance, validated_data):
+        # Optionally, if the name is updated, regenerate the slug.
+        if 'name' in validated_data:
+            validated_data['slug'] = slugify(validated_data['name'], allow_unicode=True)
+
+        # Update instance fields.
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+        
+
 
 
 class SecondItemSerializer(serializers.ModelSerializer):
@@ -40,6 +67,31 @@ class SecondItemSerializer(serializers.ModelSerializer):
         if obj.icon:
             return f"{get_full_host()}{obj.icon.url}"
         return None
+    
+
+    def create(self, validated_data):
+        # Generate a slug for the second_item based on its name.
+        generated_slug = slugify(validated_data.get('name'), allow_unicode=True)
+        validated_data['slug'] = generated_slug
+
+        # Create the second_item and its related validation status atomically.
+        with transaction.atomic():
+            second_item = SecondItem.objects.create(**validated_data)
+        
+        return second_item
+    
+
+    def update(self, instance, validated_data):
+        # Optionally, if the name is updated, regenerate the slug.
+        if 'name' in validated_data:
+            validated_data['slug'] = slugify(validated_data['name'], allow_unicode=True)
+
+        # Update instance fields.
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
 
 
 class CompanyValidationStatusSerializer(serializers.ModelSerializer):
