@@ -54,8 +54,6 @@ class FirstItemSerializer(serializers.ModelSerializer):
         return instance
         
 
-
-
 class SecondItemSerializer(serializers.ModelSerializer):
     icon = serializers.SerializerMethodField()
 
@@ -180,7 +178,6 @@ class CompanyValidationStatusSerializer(serializers.ModelSerializer):
             return instance
 
 
-
 class WorkDaySerializer(serializers.ModelSerializer):
     # Returns the human-readable day-of-week (e.g., "دوشنبه")
     day_of_week_display = serializers.CharField(source='get_day_of_week_display', read_only=True)
@@ -234,23 +231,118 @@ class WorkDaySerializer(serializers.ModelSerializer):
                 return True
 
         return False
-    
+
 
 class CompanyFirstItemSerializer(serializers.ModelSerializer):
+    # Read-only nested representation for display.
     first_item = FirstItemSerializer(read_only=True)
+    # Write-only field expecting the first_item slug.
+    first_item_slug = serializers.CharField(write_only=True)
+    # Write-only field to supply the company slug.
+    company_slug = serializers.CharField(write_only=True)
 
     class Meta:
         model = CompanyFirstItem
         fields = "__all__"
+        # The company association field (named “compay” in your model) remains read-only.
+        read_only_fields = ('compay',)
+
+    def validate(self, attrs):
+        # Validate the provided company_slug.
+        company_slug = attrs.get('company_slug')
+        try:
+            company = Company.objects.get(slug=company_slug)
+        except Company.DoesNotExist:
+            raise serializers.ValidationError({
+                "company_slug": "Company with the provided slug does not exist."
+            })
+        # Save the company instance under the model field name.
+        attrs['compay'] = company
+
+        # Validate the provided first_item_slug.
+        first_item_slug = attrs.get('first_item_slug')
+        try:
+            first_item = FirstItem.objects.get(slug=first_item_slug)
+        except FirstItem.DoesNotExist:
+            raise serializers.ValidationError({
+                "first_item_slug": "First item with the provided slug does not exist."
+            })
+        attrs['first_item'] = first_item
+
+        return attrs
+
+    def create(self, validated_data):
+        # Remove write-only slug fields.
+        validated_data.pop('company_slug', None)
+        validated_data.pop('first_item_slug', None)
+        with transaction.atomic():
+            instance = CompanyFirstItem.objects.create(**validated_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        # Remove the write-only slug fields before updating.
+        validated_data.pop('company_slug', None)
+        validated_data.pop('first_item_slug', None)
+        # Allow updating the first_item if provided.
+        if 'first_item' in validated_data:
+            instance.first_item = validated_data['first_item']
+        instance.save()
+        return instance
 
 
-# Nested serializer for the company's second item:
+
 class CompanySecondItemSerializer(serializers.ModelSerializer):
+    # Read-only nested representation for display.
     second_item = SecondItemSerializer(read_only=True)
+    # Write-only field for the second_item slug.
+    second_item_slug = serializers.CharField(write_only=True)
+    # Write-only field for the company slug.
+    company_slug = serializers.CharField(write_only=True)
 
     class Meta:
         model = CompanySecondItem
         fields = "__all__"
+        # The company association (named 'compay' in your model) is read-only.
+        read_only_fields = ('compay',)
+
+    def validate(self, attrs):
+        # Validate the provided company_slug.
+        company_slug = attrs.get('company_slug')
+        try:
+            company = Company.objects.get(slug=company_slug)
+        except Company.DoesNotExist:
+            raise serializers.ValidationError({
+                "company_slug": "Company with the provided slug does not exist."
+            })
+        attrs['compay'] = company
+
+        # Validate the provided second_item_slug.
+        second_item_slug = attrs.get('second_item_slug')
+        try:
+            second_item = SecondItem.objects.get(slug=second_item_slug)
+        except SecondItem.DoesNotExist:
+            raise serializers.ValidationError({
+                "second_item_slug": "Second item with the provided slug does not exist."
+            })
+        attrs['second_item'] = second_item
+
+        return attrs
+
+    def create(self, validated_data):
+        validated_data.pop('company_slug', None)
+        validated_data.pop('second_item_slug', None)
+        with transaction.atomic():
+            instance = CompanySecondItem.objects.create(**validated_data)
+        return instance
+
+    def update(self, instance, validated_data):
+        validated_data.pop('company_slug', None)
+        validated_data.pop('second_item_slug', None)
+        # Allow updating the second_item if provided.
+        if 'second_item' in validated_data:
+            instance.second_item = validated_data['second_item']
+        instance.save()
+        return instance
 
     
 class CompanySerializer(serializers.ModelSerializer):
