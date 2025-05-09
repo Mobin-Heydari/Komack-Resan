@@ -288,3 +288,43 @@ class WorkDayRouter(routers.DefaultRouter):
             ])),
         ]
         return default_urls + custom_urls
+
+
+
+class CompanyEmployeeRouter(routers.DefaultRouter):
+    """
+    Custom router for CompanyEmployeeViewSet.
+    
+    Endpoints:
+      - List:      GET /company-employees/
+      - Create:    POST /company-employees/create/
+      - Retrieve:  GET /company-employees/<int:pk>/
+      - Update:    PUT/PATCH /company-employees/<int:pk>/update/
+      - Delete:    DELETE /company-employees/<int:pk>/delete/
+    """
+    
+    def __init__(self):
+        super().__init__()
+        # Register the viewset with an empty prefix.
+        self.register(r'', views.CompanyEmployeeViewSet, basename='company_employee')
+    
+    def get_urls(self):
+        default_urls = super().get_urls()
+        custom_urls = [
+            path('', include([
+                # List route: GET /company-employees/
+                path('', views.CompanyEmployeeViewSet.as_view({'get': 'list'}), name='company-employee-list'),
+                # Create route: POST /company-employees/create/
+                path('create/', views.CompanyEmployeeViewSet.as_view({'post': 'create'}), name='company-employee-create'),
+                # Detail routes for Retrieve, Update, and Delete using pk.
+                path('<int:pk>/', include([
+                    # Retrieve route: GET /company-employees/<int:pk>/
+                    path('', views.CompanyEmployeeViewSet.as_view({'get': 'retrieve'}), name='company-employee-detail'),
+                    # Update route: PUT/PATCH /company-employees/<int:pk>/update/
+                    path('update/', views.CompanyEmployeeViewSet.as_view({'put': 'update', 'patch': 'update'}), name='company-employee-update'),
+                    # Delete route: DELETE /company-employees/<int:pk>/delete/
+                    path('delete/', views.CompanyEmployeeViewSet.as_view({'delete': 'destroy'}), name='company-employee-delete'),
+                ])),
+            ])),
+        ]
+        return default_urls + custom_urls
