@@ -498,19 +498,63 @@ class CompanySerializer(serializers.ModelSerializer):
         return instance
 
 
+
 class CompanyEmployeeSerializer(serializers.ModelSerializer):
-
-    company = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='name'
-    )
-
-    employee = serializers.SlugRelatedField(
-        read_only=True,
-        slug_field='full_name'
-    )
+    # Read-only fields for displaying company and employee names.
+    company = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    employee = serializers.SlugRelatedField(read_only=True, slug_field='full_name')
+    # Write-only field for specifying the company via slug.
+    company_slug = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = CompanyEmployee
-        fields = ['id', 'company', 'employee', 'position', 'created_at', 'updated_at']
+        fields = ['id', 'company', 'company_slug', 'employee', 'position', 'created_at', 'updated_at']
         read_only_fields = ('company', 'employee', 'created_at')
+
+    def validate(self, attrs):
+        """
+        On create, use company_slug to fetch the actual company instance.
+        On update, prevent changing the company.
+        """
+        if not self.instance:
+            # Remove company_slug and fetch the actual Company instance.
+            company_slug = attrs.pop('company_slug')
+            try:
+                company = Company.objects.get(slug=company_slug)
+            except Company.DoesNotExist:
+                raise serializers.ValidationError({
+                    "company_slug": "No company with this slug exists."
+                })
+            attrs['company'] = company
+        else:
+            # On update, ensure company cannot be changed.
+            if 'company_slug' in attrs:
+                if attrs['company_slug'] != self.instance.company.slug:
+                    raise serializers.ValidationError({
+                        "company_slug": "Company cannot be changed on update."
+                    })
+            attrs['company'] = self.instance.company
+
+        return attrs
+
+    def create(self, validated_data):
+        """
+        Create a new CompanyEmployee instance while ensuring company is set via slug.
+        """
+        # Remove company_slug as company instance has already been set.
+        validated_data.pop('company_slug', None)
+        with transaction.atomic():
+            instance = CompanyEmployee(**validated_data)
+            instance.save()
+        return instance
+
+    def update(self, instance, validated_data):
+        """
+        Update an existing CompanyEmployee instance while ensuring company remains unchanged.
+        """
+        # Prevent updating company.
+        validated_data.pop('company_slug', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
