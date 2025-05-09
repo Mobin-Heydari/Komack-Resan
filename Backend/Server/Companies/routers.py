@@ -243,3 +243,48 @@ class CompanySecondItemRouter(routers.DefaultRouter):
         ]
         return default_urls + custom_urls
 
+
+
+class WorkDayRouter(routers.DefaultRouter):
+    """
+    Custom router for WorkDayViewSet.
+    
+    Endpoints:
+      - List:      GET /workdays/
+      - Create:    POST /workdays/create/
+      - Retrieve:  GET /workdays/<int:pk>/
+      - Update:    PUT/PATCH /workdays/<int:pk>/update/
+      - Delete:    DELETE /workdays/<int:pk>/delete/
+    """
+    def __init__(self):
+        super().__init__()
+        # Register the viewset with an empty prefix.
+        self.register(r'', views.WorkDayViewSet, basename='workday')
+
+    def get_urls(self):
+        default_urls = super().get_urls()
+        custom_urls = [
+            path('', include([
+                # List route: GET /workdays/
+                path('', views.WorkDayViewSet.as_view({'get': 'list'}), name='workday-list'),
+                # Create route: POST /workdays/create/
+                path('create/', views.WorkDayViewSet.as_view({'post': 'create'}), name='workday-create'),
+                # Detail routes for Retrieve, Update, and Delete using pk
+                path('<int:pk>/', include([
+                    # Retrieve route: GET /workdays/<int:pk>/
+                    path('', views.WorkDayViewSet.as_view({
+                        'get': 'retrieve'
+                    }), name='workday-detail'),
+                    # Update route: PUT/PATCH /workdays/<int:pk>/update/
+                    path('update/', views.WorkDayViewSet.as_view({
+                        'put': 'update',
+                        'patch': 'update'
+                    }), name='workday-update'),
+                    # Delete route: DELETE /workdays/<int:pk>/delete/
+                    path('delete/', views.WorkDayViewSet.as_view({
+                        'delete': 'destroy'
+                    }), name='workday-delete'),
+                ])),
+            ])),
+        ]
+        return default_urls + custom_urls
