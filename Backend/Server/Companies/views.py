@@ -5,9 +5,15 @@ from django.utils.text import slugify
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
-from .models import Company
-from .serializers import CompanySerializer
-from .permissions import IsAdminOrOwner
+from .models import(
+    Company,
+    FirstItem,
+)
+from .serializers import(
+    CompanySerializer,
+    FirstItemSerializer,
+)
+from .permissions import IsAdminOrOwner, IsAdminOrReadOnly
 
 
 
@@ -92,5 +98,66 @@ class CompanyViewSet(viewsets.ViewSet):
         company.delete()
         return Response(
             {'message': 'Company deleted successfully.'},
+            status=status.HTTP_204_NO_CONTENT
+        )
+
+
+
+
+class FirstItemViewSet(viewsets.ViewSet):
+    """
+    A ViewSet for managing FirstItem instances.
+    - Listing: Available to all users.
+    - Retrieve: Available to all users.
+    - Create, Update, Delete: Restricted to admin users.
+    """
+    permission_classes = [IsAdminOrReadOnly]
+
+    def list(self, request):
+        queryset = FirstItem.objects.all()
+        serializer = FirstItemSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def retrieve(self, request, slug):
+        first_item = get_object_or_404(FirstItem, slug=slug)
+        serializer = FirstItemSerializer(first_item, context={'request': request})
+        return Response(serializer.data)
+
+    def create(self, request):
+        serializer = FirstItemSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            first_item = serializer.save()
+            response_serializer = FirstItemSerializer(first_item, context={'request': request})
+            return Response(
+                {
+                    'message': 'FirstItem created successfully.',
+                    'data': response_serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, slug):
+        first_item = get_object_or_404(FirstItem, slug=slug)
+        self.check_object_permissions(request, first_item)
+        serializer = FirstItemSerializer(first_item, data=request.data, context={'request': request})
+        if serializer.is_valid():
+            first_item = serializer.save()
+            response_serializer = FirstItemSerializer(first_item, context={'request': request})
+            return Response(
+                {
+                    'message': 'FirstItem updated successfully.',
+                    'data': response_serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, slug):
+        first_item = get_object_or_404(FirstItem, slug=slug)
+        self.check_object_permissions(request, first_item)
+        first_item.delete()
+        return Response(
+            {'message': 'FirstItem deleted successfully.'},
             status=status.HTTP_204_NO_CONTENT
         )
