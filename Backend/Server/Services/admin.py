@@ -1,12 +1,12 @@
 from django.contrib import admin
-from .models import Service, ServiceEmployees
+from .models import Service, ServiceEmployee
 
 
 
 
 # Inline for ServiceEmployees
-class ServiceEmployeesInline(admin.TabularInline):
-    model = ServiceEmployees
+class ServiceEmployeeInline(admin.TabularInline):
+    model = ServiceEmployee
     extra = 0
     fields = ('job_title', 'employee', 'created_at')
     readonly_fields = ('created_at',)
@@ -32,12 +32,12 @@ class ServiceAdmin(admin.ModelAdmin):
     )
     list_filter = ('payment_status', 'service_status', 'is_invoiced')
     prepopulated_fields = {"slug": ("title",)}
-    inlines = [ServiceEmployeesInline]
+    inlines = [ServiceEmployeeInline]
     readonly_fields = ('created_at', 'updated_at')
 
 
-@admin.register(ServiceEmployees)
-class ServiceEmployeesAdmin(admin.ModelAdmin):
+@admin.register(ServiceEmployee)
+class ServiceEmployeeAdmin(admin.ModelAdmin):
     list_display = ('job_title', 'recipient_service', 'employee', 'created_at')
     search_fields = (
         'job_title', 

@@ -106,7 +106,7 @@ class Service(models.Model):
 
 
 
-class ServiceEmployees(models.Model):
+class ServiceEmployee(models.Model):
 
     job_title = models.CharField(max_length=255, verbose_name="سمت کاری")
 
