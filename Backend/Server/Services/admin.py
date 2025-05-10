@@ -1,20 +1,7 @@
 from django.contrib import admin
-from django.utils.html import format_html
-from .models import Service, ServiceContent, ServiceEmployees
+from .models import Service, ServiceEmployees
 
 
-# Inline for ServiceContent
-class ServiceContentInline(admin.TabularInline):
-    model = ServiceContent
-    extra = 0
-    fields = ('title', 'image_preview', 'video', 'created_at')
-    readonly_fields = ('image_preview', 'created_at')
-
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" width="100" style="height:auto;" />', obj.image.url)
-        return "-"
-    image_preview.short_description = "Preview Image"
 
 
 # Inline for ServiceEmployees
@@ -45,22 +32,8 @@ class ServiceAdmin(admin.ModelAdmin):
     )
     list_filter = ('payment_status', 'service_status', 'is_invoiced')
     prepopulated_fields = {"slug": ("title",)}
-    inlines = [ServiceContentInline, ServiceEmployeesInline]
+    inlines = [ServiceEmployeesInline]
     readonly_fields = ('created_at', 'updated_at')
-
-
-@admin.register(ServiceContent)
-class ServiceContentAdmin(admin.ModelAdmin):
-    list_display = ('service', 'title', 'image_preview', 'created_at')
-    search_fields = ('service__title', 'title')
-    list_filter = ('service',)
-    readonly_fields = ('created_at', 'updated_at')
-
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" width="100" style="height:auto;" />', obj.image.url)
-        return "-"
-    image_preview.short_description = "Preview Image"
 
 
 @admin.register(ServiceEmployees)

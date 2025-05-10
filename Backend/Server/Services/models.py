@@ -105,45 +105,6 @@ class Service(models.Model):
         return None
 
 
-class ServiceContent(models.Model):
-    service = models.ForeignKey(
-        Service,
-        on_delete=models.CASCADE,
-        related_name='Content',
-        verbose_name="سرویس"
-    )
-
-    title = models.CharField(
-        verbose_name="عنوان",
-        max_length=255,
-        blank=True,
-        null=True
-    )
-
-    image = models.ImageField(
-        verbose_name="عکس",
-        upload_to="Services/content/images/",
-        null=True,
-        blank=True
-    )
-
-    video = models.FileField(
-        verbose_name="ویدیو",
-        upload_to="Services/content/videos/",
-        null=True,
-        blank=True
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
-
-    class Meta:
-        verbose_name = 'محتوای سرویس'
-        verbose_name_plural = 'محتواهای سرویس‌ها'
-
-    def __str__(self):
-        return f'{self.service.title}'
-
 
 class ServiceEmployees(models.Model):
 
