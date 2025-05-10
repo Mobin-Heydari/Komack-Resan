@@ -9,4 +9,5 @@ urlpatterns = [
     path('profiles/', include('Profiles.urls', namespace='Profiles')),
     path('industries/', include('Industries.urls', namespace='Industries')),
     path('companies/', include('Companies.urls', namespace='Companies')),
+    path('services/', include('Services.urls', namespace='Services')),
 ]
