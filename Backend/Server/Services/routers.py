@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework import routers
-from .views import ServiceViewSet
+from .views import ServiceViewSet, ServiceEmployeeViewSet
 
 class ServiceRouter(routers.DefaultRouter):
     """
@@ -31,6 +31,46 @@ class ServiceRouter(routers.DefaultRouter):
                     path('', ServiceViewSet.as_view({'get': 'retrieve'}), name='service-detail'),
                     # Update route: PUT/PATCH /services/<slug>/update/
                     path('update/', ServiceViewSet.as_view({'put': 'update', 'patch': 'update'}), name='service-update'),
+                ])),
+            ])),
+        ]
+        return default_urls + custom_urls
+
+
+
+class ServiceEmployeeRouter(routers.DefaultRouter):
+    """
+    Custom router for ServiceEmployeeViewSet.
+    
+    Endpoints:
+      - List:      GET /service-employees/
+      - Create:    POST /service-employees/create/
+      - Retrieve:  GET /service-employees/<int:pk>/
+      - Update:    PUT/PATCH /service-employees/<int:pk>/update/
+      - Delete:    DELETE /service-employees/<int:pk>/delete/
+    """
+    
+    def __init__(self):
+        super().__init__()
+        # Register the viewset with an empty prefix.
+        self.register(r'', ServiceEmployeeViewSet, basename='service_employee')
+    
+    def get_urls(self):
+        default_urls = super().get_urls()
+        custom_urls = [
+            path('', include([
+                # List: GET /service-employees/
+                path('', ServiceEmployeeViewSet.as_view({'get': 'list'}), name='service-employee-list'),
+                # Create: POST /service-employees/create/
+                path('create/', ServiceEmployeeViewSet.as_view({'post': 'create'}), name='service-employee-create'),
+                # Detail routes grouped under the primary key.
+                path('<int:pk>/', include([
+                    # Retrieve: GET /service-employees/<int:pk>/
+                    path('', ServiceEmployeeViewSet.as_view({'get': 'retrieve'}), name='service-employee-detail'),
+                    # Update: PUT/PATCH /service-employees/<int:pk>/update/
+                    path('update/', ServiceEmployeeViewSet.as_view({'put': 'update', 'patch': 'update'}), name='service-employee-update'),
+                    # Delete: DELETE /service-employees/<int:pk>/delete/
+                    path('delete/', ServiceEmployeeViewSet.as_view({'delete': 'destroy'}), name='service-employee-delete'),
                 ])),
             ])),
         ]
