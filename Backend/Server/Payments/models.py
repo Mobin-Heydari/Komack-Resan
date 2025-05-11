@@ -1,10 +1,9 @@
-# Payment/models.py
+import uuid
 from django.db import models
 from Invoices.models import Invoice
 
-
-
 class PaymentInvoice(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     class PaymentStatusChoices(models.TextChoices):
         PENDING = 'PE', 'در انتظار پرداخت'
@@ -45,8 +44,8 @@ class PaymentInvoice(models.Model):
         When a payment is confirmed (e.g., via a gateway callback),
         mark the payment and update the corresponding invoice.
         """
-        self.payment_status = 'SU'
+        self.payment_status = self.PaymentStatusChoices.SUCCESS
         self.save()
-        # When payment succeeds, we update the invoice's is_paid flag.
+        # When payment succeeds, update the invoice’s is_paid flag.
         self.invoice.is_paid = True
         self.invoice.save()
