@@ -77,7 +77,6 @@ class CitySerializer(serializers.ModelSerializer):
 
 
 
-# RecipientAddress is a child of City.
 class RecipientAddressSerializer(serializers.ModelSerializer):
     # Return nested city details for read.
     city = CitySerializer(read_only=True)
@@ -86,7 +85,7 @@ class RecipientAddressSerializer(serializers.ModelSerializer):
         write_only=True,
         help_text="Slug of the associated city."
     )
-    # Assuming you want to show the recipient's username for read.
+    # For read operations, display the recipient's username.
     Recipient = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
@@ -94,7 +93,10 @@ class RecipientAddressSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = RecipientAddress
-        fields = ['id', 'city', 'city_slug', 'Recipient', 'title', 'address', 'created_at', 'updated_at']
+        fields = [
+            'id', 'city', 'city_slug', 'Recipient', 
+            'title', 'address', 'created_at', 'updated_at'
+        ]
         read_only_fields = ['created_at', 'updated_at']
     
     def validate(self, attrs):
@@ -114,7 +116,14 @@ class RecipientAddressSerializer(serializers.ModelSerializer):
         return attrs
     
     def create(self, validated_data):
+        # Remove the write-only field.
         validated_data.pop('city_slug', None)
+        # Automatically assign the current user as the Recipient.
+        request = self.context.get('request')
+        if request and request.user and request.user.is_authenticated:
+            validated_data['Recipient'] = request.user
+        else:
+            raise serializers.ValidationError("Authenticated user required.")
         return RecipientAddress.objects.create(**validated_data)
     
     def update(self, instance, validated_data):
