@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 
 from Users.models import User
 from Industries.models import Industry
+from Addresses.models import City
 
 
 
@@ -142,12 +143,6 @@ class Company(models.Model):
         blank=True,
         null=True,
         verbose_name="ویدئوی معرفی"
-    )
-
-    address = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="آدرس"
     )
 
     postal_code = models.CharField(
@@ -508,3 +503,32 @@ class CompanySecondItem(models.Model):
     class Meta:
         verbose_name = "آیتم دوم شرکت"
         verbose_name_plural = "آیتم های دوم شرکت"
+
+
+
+class CompanyAddress(models.Model):
+
+    city = models.ForeignKey(
+        City,
+        on_delete=models.CASCADE,
+        verbose_name="شهر"
+    )
+
+    company = models.ForeignKey(
+        "Companies.Company",
+        on_delete=models.CASCADE,
+        verbose_name="خدمات گیرنده"
+    )
+
+    address = models.TextField(verbose_name="آدرس")
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="ساخته شده")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="آپدیت شده")
+
+
+    class Meta:
+        verbose_name = "آدرس مشتری"
+        verbose_name_plural = "آدرس های مشتری ها"
+
+    def __str__(self):
+        return f"{self.title} - {self.address}"
