@@ -1,5 +1,8 @@
 from django.db import models
 from django.utils import timezone
+
+from Users.models import User
+
 import uuid
 
 
@@ -93,3 +96,43 @@ class UserRegisterOTP(models.Model):
 
     def __str__(self):
         return f"{self.username} - {self.otp.token} - {self.user_type}"
+
+
+
+class UserLoginOTP(models.Model):
+
+    otp = models.ForeignKey(
+        OneTimePassword,
+        on_delete=models.CASCADE,
+        related_name="login_otps",
+        verbose_name="کد یکبار مصرف"
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="کاربر"
+    )
+
+    phone = models.CharField(
+        max_length=12,
+        verbose_name="شماره تلفن"
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="تاریخ ایجاد"
+    )
+
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name="تاریخ بروزرسانی"
+    )
+
+
+    class Meta:
+        verbose_name = "رمز یکبار مصرف ورود کاربر"
+        verbose_name_plural = "رمزهای یکبار مصرف ورود کاربران"
+
+    def __str__(self):
+        return f"ورود برای {self.user.phone} - {self.otp.token}"
