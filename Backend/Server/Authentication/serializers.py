@@ -39,7 +39,7 @@ class OneTimePasswordSerializer(serializers.ModelSerializer):
     
 
 
-class LoginSerializer(serializers.Serializer):
+class PasswordLoginSerializer(serializers.Serializer):
 
     phone = serializers.CharField(max_length=255)
     password = serializers.CharField(max_length=255, write_only=True)
@@ -206,7 +206,7 @@ class UserRegisterOneTimePasswordSerializer(serializers.ModelSerializer):
     
 
 
-class UserRegisterSerializer(serializers.Serializer):
+class UserRegisterValidateOneTimePasswordSerializer(serializers.Serializer):
 
     code = serializers.CharField(max_length=6, min_length=6, required=True)  
 

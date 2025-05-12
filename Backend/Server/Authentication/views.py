@@ -7,7 +7,14 @@ from rest_framework.exceptions import ValidationError
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import LoginSerializer, UserRegisterOneTimePasswordSerializer, UserRegisterSerializer, UserLoginOneTimePasswordSerializer, UserLoginValidateOneTimePasswordSerializer
+from .serializers import (  
+    PasswordLoginSerializer,
+    UserRegisterOneTimePasswordSerializer,
+    UserRegisterValidateOneTimePasswordSerializer,
+    UserLoginOneTimePasswordSerializer,
+    UserLoginValidateOneTimePasswordSerializer
+)
+
 from .models import OneTimePassword, UserRegisterOTP, UserLoginOTP
 
 from Users.models import User
@@ -15,10 +22,10 @@ from Users.models import User
 
 
 
-class LoginAPIView(APIView):
+class UserLoginPasswordAPIView(APIView):
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
+        serializer = PasswordLoginSerializer(data=request.data)
 
         if request.user.is_authenticated:
             return Response({"message": "شما قبلاً وارد شده‌اید"}, status=status.HTTP_400_BAD_REQUEST)
@@ -49,7 +56,7 @@ class LoginAPIView(APIView):
 
 
 
-class UserRegisterOtpAPIView(APIView):
+class UserRegisterOneTimePasswordAPIView(APIView):
 
     def post(self, request):
         
@@ -78,7 +85,7 @@ class UserRegisterOtpAPIView(APIView):
 
 
 
-class UserRegisterOtpValidateAPIView(APIView):
+class UserRegisterValidateOneTimePasswordAPIView(APIView):
 
     def post(self, request, token):
 
@@ -86,7 +93,7 @@ class UserRegisterOtpValidateAPIView(APIView):
             otp = get_object_or_404(OneTimePassword, token=token)
             if otp:
                 if otp.registration_otps:
-                    serializer = UserRegisterSerializer(data=request.data, context={'otp_token': otp.token})
+                    serializer = UserRegisterValidateOneTimePasswordSerializer(data=request.data, context={'otp_token': otp.token})
                     if serializer.is_valid(raise_exception=True):
 
                         user_data = serializer.create(
