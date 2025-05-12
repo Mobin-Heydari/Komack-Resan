@@ -438,10 +438,6 @@ class CompanyAddressSerializer(serializers.ModelSerializer):
             company = Company.objects.get(slug=company_slug)
         except Company.DoesNotExist:
             raise serializers.ValidationError({"company_slug": f"No Company exists with the slug '{company_slug}'."})
-
-        # Ensure the request user is the company's employer.
-        if not request or not request.user or company.employer != request.user:
-            raise serializers.ValidationError({"company": "You are not authorized to manage this company's address."})
         
         attrs['company'] = company
         return attrs

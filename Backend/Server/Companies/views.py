@@ -7,6 +7,7 @@ from .models import(
     WorkDay,
     FirstItem,
     SecondItem,
+    CompanyAddress,
     CompanyEmployee,
     CompanyFirstItem,
     CompanySecondItem,
@@ -17,6 +18,7 @@ from .serializers import(
     WorkDaySerializer,
     FirstItemSerializer,
     SecondItemSerializer,
+    CompanyAddressSerializer,
     CompanyEmployeeSerializer,
     CompanyFirstItemSerializer,
     CompanySecondItemSerializer,
@@ -547,3 +549,89 @@ class CompanyEmployeeViewSet(viewsets.ViewSet):
         self.check_object_permissions(request, instance)
         instance.delete()
         return Response({'message': 'Company employee deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+
+class CompanyAddressViewSet(viewsets.ViewSet):
+    """
+    ViewSet for managing CompanyAddress objects.
+
+    Endpoints:
+      - list: GET /company-addresses/
+          * If admin, returns all addresses.
+          * Otherwise, returns only addresses where company.employer equals request.user.
+      - create: POST /company-addresses/create/
+          * Creation is allowed only if the request.user equals the company’s employer,
+            as validated by the serializer.
+      - retrieve: GET /company-addresses/<int:pk>/
+          * Access is allowed if the requester is an admin or if the address's company.employer equals request.user.
+      - update: PUT/PATCH /company-addresses/<int:pk>/update/
+          * Updates are allowed only if request.user matches the company’s employer or is an admin.
+      - destroy: DELETE /company-addresses/<int:pk>/delete/
+          * Deletion is allowed only if request.user is admin or equals the company’s employer.
+    """
+    
+    permission_classes = [IsAdminOrCompanyEmployer]
+
+
+    def list(self, request):
+        if request.user.is_staff:
+            queryset = CompanyAddress.objects.all()
+        else:
+            queryset = CompanyAddress.objects.filter(company__employer=request.user)
+            if not queryset.exists():
+                return Response(
+                    {"detail": "You do not have permission to view any company address."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        serializer = CompanyAddressSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self, request):
+        serializer = CompanyAddressSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            instance = serializer.save()  # Serializer verifies that request.user == company.employer.
+            response_serializer = CompanyAddressSerializer(instance, context={'request': request})
+            return Response(
+                {"message": "Company address created successfully.", "data": response_serializer.data},
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, pk=None):
+        instance = get_object_or_404(CompanyAddress, pk=pk)
+        if not (request.user.is_staff or instance.company.employer == request.user):
+            return Response(
+                {"detail": "You do not have permission to access this company address."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = CompanyAddressSerializer(instance)
+        return Response(serializer.data)
+
+    def update(self, request, pk=None):
+        instance = get_object_or_404(CompanyAddress, pk=pk)
+        if not (request.user.is_staff or instance.company.employer == request.user):
+            return Response(
+                {"detail": "You do not have permission to update this company address."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = CompanyAddressSerializer(instance, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            updated_instance = serializer.save()
+            response_serializer = CompanyAddressSerializer(updated_instance)
+            return Response(
+                {"message": "Company address updated successfully.", "data": response_serializer.data},
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        instance = get_object_or_404(CompanyAddress, pk=pk)
+        if not (request.user.is_staff or instance.company.employer == request.user):
+            return Response(
+                {"detail": "You do not have permission to delete this company address."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        instance.delete()
+        return Response({"message": "Company address deleted."}, status=status.HTTP_204_NO_CONTENT)
