@@ -19,9 +19,9 @@ class ProvinceViewSet(viewsets.ViewSet):
     Endpoints:
       - list:     GET /provinces/
       - create:   POST /provinces/create/           (Admin only)
-      - retrieve: GET /provinces/<pk>/
-      - update:   PUT/PATCH /provinces/<pk>/update/   (Admin only)
-      - destroy:  DELETE /provinces/<pk>/delete/       (Admin only)
+      - retrieve: GET /provinces/<slug>/
+      - update:   PUT/PATCH /provinces/<slug>/update/   (Admin only)
+      - destroy:  DELETE /provinces/<slug>/delete/       (Admin only)
     """
     permission_classes = [CityProvinceAdminPermission]
 
@@ -41,13 +41,13 @@ class ProvinceViewSet(viewsets.ViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def retrieve(self, request, pk=None):
-        instance = get_object_or_404(Province, pk=pk)
+    def retrieve(self, request, slug):
+        instance = get_object_or_404(Province, slug=slug)
         serializer = ProvinceSerializer(instance, context={'request': request})
         return Response(serializer.data)
 
-    def update(self, request, pk=None):
-        instance = get_object_or_404(Province, pk=pk)
+    def update(self, request, slug):
+        instance = get_object_or_404(Province, slug=slug)
         self.check_object_permissions(request, instance)
         serializer = ProvinceSerializer(instance, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
@@ -59,8 +59,8 @@ class ProvinceViewSet(viewsets.ViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, pk=None):
-        instance = get_object_or_404(Province, pk=pk)
+    def destroy(self, request, slug):
+        instance = get_object_or_404(Province, slug=slug)
         self.check_object_permissions(request, instance)
         instance.delete()
         return Response({"message": "Province deleted."}, status=status.HTTP_204_NO_CONTENT)
@@ -77,9 +77,9 @@ class CityViewSet(viewsets.ViewSet):
     Endpoints:
       - list:     GET /cities/
       - create:   POST /cities/create/             (Admin only)
-      - retrieve: GET /cities/<pk>/
-      - update:   PUT/PATCH /cities/<pk>/update/     (Admin only)
-      - destroy:  DELETE /cities/<pk>/delete/          (Admin only)
+      - retrieve: GET /cities/<slug>/
+      - update:   PUT/PATCH /cities/<slug>/update/     (Admin only)
+      - destroy:  DELETE /cities/<slug>/delete/          (Admin only)
     """
     permission_classes = [CityProvinceAdminPermission]
 
@@ -99,13 +99,13 @@ class CityViewSet(viewsets.ViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def retrieve(self, request, pk=None):
-        instance = get_object_or_404(City, pk=pk)
+    def retrieve(self, request, slug):
+        instance = get_object_or_404(City, slug=slug)
         serializer = CitySerializer(instance, context={'request': request})
         return Response(serializer.data)
 
-    def update(self, request, pk=None):
-        instance = get_object_or_404(City, pk=pk)
+    def update(self, request, slug):
+        instance = get_object_or_404(City, slug=slug)
         self.check_object_permissions(request, instance)
         serializer = CitySerializer(instance, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
@@ -117,8 +117,8 @@ class CityViewSet(viewsets.ViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, pk=None):
-        instance = get_object_or_404(City, pk=pk)
+    def destroy(self, request, slug):
+        instance = get_object_or_404(City, slug=slug)
         self.check_object_permissions(request, instance)
         instance.delete()
         return Response({"message": "City deleted."}, status=status.HTTP_204_NO_CONTENT)
