@@ -328,3 +328,31 @@ class CompanyEmployeeRouter(routers.DefaultRouter):
             ])),
         ]
         return default_urls + custom_urls
+    
+
+
+class CompanyAddressRouter(routers.DefaultRouter):
+    """
+    Custom router for CompanyAddressViewSet.
+
+    Endpoints:
+      - List:       GET /company-addresses/
+      - Create:     POST /company-addresses/create/
+      - Retrieve:   GET /company-addresses/<int:pk>/
+      - Update:     PUT/PATCH /company-addresses/<int:pk>/update/
+      - Delete:     DELETE /company-addresses/<int:pk>/delete/
+    """
+    def __init__(self):
+        super().__init__()
+        # Register the viewset with an empty prefix so default list endpoint appears at the base.
+        self.register(r'', views.CompanyAddressViewSet, basename='company_address')
+
+    def get_urls(self):
+        default_urls = super().get_urls()
+        custom_urls = [
+            path('create/', views.CompanyAddressViewSet.as_view({'post': 'create'}), name='company_address-create'),
+            path('<int:pk>/', views.CompanyAddressViewSet.as_view({'get': 'retrieve'}), name='company_address-detail'),
+            path('<int:pk>/update/', views.CompanyAddressViewSet.as_view({'put': 'update', 'patch': 'update'}), name='company_address-update'),
+            path('<int:pk>/delete/', views.CompanyAddressViewSet.as_view({'delete': 'destroy'}), name='company_address-destroy'),
+        ]
+        return default_urls + custom_urls

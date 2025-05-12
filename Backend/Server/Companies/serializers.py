@@ -475,7 +475,7 @@ class CompanySerializer(serializers.ModelSerializer):
     intro_video = serializers.SerializerMethodField()
     validation_status = CompanyValidationStatusSerializer(read_only=True)
     workdays = WorkDaySerializer(many=True, read_only=True)
-    address = CompanyAddress(many=True, read_only=True)
+    address = CompanyAddressSerializer(read_only=True)
     companies_first_item = CompanyFirstItemSerializer(many=True, read_only=True)
     companies_second_item = CompanySecondItemSerializer(many=True, read_only=True)
     # Use a write-only field for industry identification

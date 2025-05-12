@@ -4,6 +4,7 @@ from .routers import (
     WorkDayRouter,
     FirstItemRouter,
     SecondItemRouter,
+    CompanyAddressRouter,
     CompanyEmployeeRouter,
     CompanyFirstItemRouter,
     CompanySecondItemRouter,
@@ -23,6 +24,7 @@ company_first_item_router = CompanyFirstItemRouter()
 company_second_item_router = CompanySecondItemRouter()
 workday_router = WorkDayRouter()
 company_employee_router = CompanyEmployeeRouter()
+company_address_router = CompanyAddressRouter()
 
 
 urlpatterns = [
@@ -34,4 +36,5 @@ urlpatterns = [
     path('company-second-item/', include(company_second_item_router.get_urls())),
     path('work-day/', include(workday_router.get_urls())),
     path('employees/', include(company_employee_router.get_urls())),
+    path('addresses/', include(company_address_router.get_urls())),
 ]
