@@ -3,7 +3,7 @@ from rest_framework import validators
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from Users.models import User, IdCardInFormation
-from .models import OneTimePassword, UserRegisterOTP
+from .models import OneTimePassword, UserRegisterOTP, UserLoginOTP
 
 from random import randint
 import uuid
@@ -264,3 +264,66 @@ class UserRegisterSerializer(serializers.Serializer):
                 'access': str(refresh.access_token),
             }
         }
+    
+
+
+class UserLoginOneTimePasswordSerializer(serializers.Serializer):
+
+    phone = serializers.CharField(required=True, write_only=True)
+
+    def validate_phone(self, value):
+        if value is None:
+            raise serializers.ValidationError('شماره تلفن الزامی است')
+        return value
+
+    def validate(self, atters):
+        if User.objects.filter(phone=atters['phone']).exists():
+            return atters
+        else:
+            raise serializers.ValidationError('شماره تلفن موجود نیست')
+
+    def create(self, validated_data):
+
+        code = randint(100000, 999999)
+
+        token = uuid.uuid4()
+        
+        otp = OneTimePassword.objects.create(
+            token=token,
+            code=code
+        )
+        
+        otp.save()
+
+        otp.get_expiration()
+        
+        user = User.objects.get(phone=validated_data['phone'])
+        
+        user_login_otp = UserLoginOTP.objects.create(
+            otp=otp,
+            user=user,
+            phone=validated_data['phone']
+        )
+
+        user_login_otp.save()
+
+        return {'phone': user_login_otp.phone, 'token': token, 'code': code}
+
+
+
+class UserLoginValidateOneTimePasswordSerializer(serializers.Serializer):
+
+    code = serializers.CharField(max_length=6, min_length=6, required=True)
+
+    def validate(self, attrs):
+        otp_token = self.context.get('otp_token')
+        
+        otp = OneTimePassword.objects.get(token=otp_token)
+
+        if otp.status_validation() == 'ACT':
+            if otp.code == attrs['code']:
+                return attrs
+            else:
+                raise serializers.ValidationError({'code': 'Invalid OTP code.'})
+        else:
+            raise serializers.ValidationError('Inactive OTP')
