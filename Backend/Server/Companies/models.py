@@ -514,7 +514,7 @@ class CompanyAddress(models.Model):
         verbose_name="شهر"
     )
 
-    company = models.ForeignKey(
+    company = models.OneToOneField(
         "Companies.Company",
         on_delete=models.CASCADE,
         verbose_name="خدمات گیرنده"
