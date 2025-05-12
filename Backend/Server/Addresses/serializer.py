@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Province, City
+from .models import Province, City, RecipientAddress
 
 
 
@@ -75,3 +75,59 @@ class CitySerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
+
+
+# RecipientAddress is a child of City.
+class RecipientAddressSerializer(serializers.ModelSerializer):
+    # Return nested city details for read.
+    city = CitySerializer(read_only=True)
+    # For write operations, accept a city_slug instead of a PK.
+    city_slug = serializers.CharField(
+        write_only=True,
+        help_text="Slug of the associated city."
+    )
+    # Assuming you want to show the recipient's username for read.
+    Recipient = serializers.SlugRelatedField(
+        read_only=True,
+        slug_field='username'
+    )
+    
+    class Meta:
+        model = RecipientAddress
+        fields = ['id', 'city', 'city_slug', 'Recipient', 'title', 'address', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def validate(self, attrs):
+        data = self.initial_data
+        city_slug = data.get('city_slug')
+        if not city_slug:
+            raise serializers.ValidationError({
+                "city_slug": "This field is required."
+            })
+        try:
+            city = City.objects.get(slug=city_slug)
+        except City.DoesNotExist:
+            raise serializers.ValidationError({
+                "city_slug": f"No City exists with the slug '{city_slug}'."
+            })
+        attrs['city'] = city
+        return attrs
+    
+    def create(self, validated_data):
+        validated_data.pop('city_slug', None)
+        return RecipientAddress.objects.create(**validated_data)
+    
+    def update(self, instance, validated_data):
+        if 'city_slug' in self.initial_data:
+            city_slug = self.initial_data.get('city_slug')
+            try:
+                city = City.objects.get(slug=city_slug)
+            except City.DoesNotExist:
+                raise serializers.ValidationError({
+                    "city_slug": f"No City exists with the slug '{city_slug}'."
+                })
+            instance.city = city
+        instance.title = validated_data.get('title', instance.title)
+        instance.address = validated_data.get('address', instance.address)
+        instance.save()
+        return instance
