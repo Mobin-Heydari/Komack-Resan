@@ -60,7 +60,24 @@ class ResetPasswordOneTimePasswordSerializer(serializers.Serializer):
 class ResetPasswordValidateOneTimePasswordSerializer(serializers.Serializer):
 
     code = serializers.CharField(max_length=6, min_length=6, required=True)
+    password = serializers.CharField(max_length=16, min_length=8, required=True)
+    password_conf = serializers.CharField(max_length=16, min_length=8, required=True)
 
+     # Validate the password field
+    def validate_password(self, value):
+        # Check if the password length is within the allowed range
+        if len(value) < 8 or len(value) > 16:
+            raise serializers.ValidationError('Password must be at least 8 characters long and the most 16 characters long')
+        return value
+
+    # Validate the password_conf field
+    def validate_password_conf(self, value):
+        # Check if the password_conf length is within the allowed range
+        if len(value) < 8 or len(value) > 16:
+            raise serializers.ValidationError('Password must be at least 8 characters long and the most 16 characters long')
+        return value
+    
+    
     def validate(self, attrs):
         otp_token = self.context.get('otp_token')
         
@@ -68,6 +85,13 @@ class ResetPasswordValidateOneTimePasswordSerializer(serializers.Serializer):
 
         if otp.status_validation() == 'ACT':
             if otp.code == attrs['code']:
+                # Check if the password and password_conf match
+                if attrs['password'] != attrs['password_conf']:
+                    raise serializers.ValidationError('Passwords do not match')
+                if attrs['password'] == attrs['username']:
+                    raise serializers.ValidationError('Password cannot be the same as the username')
+                if len(attrs['password']) < 8 or len(attrs['password']) > 16:
+                    raise serializers.ValidationError('Password must be between 8 and 16 characters long')
                 return attrs
             else:
                 raise serializers.ValidationError({'code': 'Invalid OTP code.'})
