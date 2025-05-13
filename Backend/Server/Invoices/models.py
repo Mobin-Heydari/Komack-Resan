@@ -3,6 +3,8 @@ from django.utils import timezone
 from Companies.models import Company
 from Services.models import Service
 
+import uuid
+
 
 
 class Invoice(models.Model):
@@ -10,6 +12,8 @@ class Invoice(models.Model):
     class DeadlineStatusChoices(models.TextChoices):
         ACTIVE = 'AC', 'فعال'
         EXPIRED = 'EX', 'منقضی شده'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     
     company = models.ForeignKey(
         Company,
