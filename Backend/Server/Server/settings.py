@@ -229,4 +229,4 @@ ZP_API_VERIFY = f"https://{sandbox}.zarinpal.com/pg/rest/WebGate/PaymentVerifica
 # URL for starting the payment (we’ll append the authority as a query parameter)
 ZP_API_STARTPAY = f"https://{sandbox}.zarinpal.com/pg/StartPay/"
 
-CallbackURL = 'http://127.0.0.1:8080/payments/verify/'  # Your callback URL
+CallbackURL = 'http://127.0.0.1:8080/payments/zarinpal-verify//'  # Your callback URL
