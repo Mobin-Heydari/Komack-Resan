@@ -1,9 +1,13 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+
 from .models import Invoice
 from .serializers import InvoiceSerializer
 from .permissions import IsInvoiceAdmin
+
+
+
 
 class InvoiceViewSet(viewsets.ViewSet):
     """
@@ -14,13 +18,13 @@ class InvoiceViewSet(viewsets.ViewSet):
            • If request.user.is_staff, returns all invoices (or filtered by company_slug if provided).
            • If request.user.user_type == "OW", returns invoices for companies where the user is the owner.
            • Otherwise, returns a 403 error.
+      - Create:    POST /invoices/create/
+           • Only accessible to admin users (via IsInvoiceAdmin).
       - Retrieve:  GET /invoices/<pk>/
            • Only accessible if the request user is an admin or (if not admin) they must have an associated company 
              that matches the invoice’s company.
       - Update:    PUT/PATCH /invoices/<pk>/update/
            • Delegated to the custom permission class (IsInvoiceAdmin).
-
-    Note: Creation is restricted to the program/admin only.
     """
     permission_classes = [IsInvoiceAdmin]
     
@@ -48,14 +52,25 @@ class InvoiceViewSet(viewsets.ViewSet):
                     {"detail": "You do not have permission to list invoices."},
                     status=status.HTTP_403_FORBIDDEN
                 )
-        serializer = InvoiceSerializer(queryset, many=True, context={'request': request})
+        serializer = InvoiceSerializer(queryset, many=True)
         return Response(serializer.data)
+    
+    def create(self, request):
+        serializer = InvoiceSerializer(data=request.data)
+        if serializer.is_valid():
+            invoice = serializer.save()
+            response_serializer = InvoiceSerializer(invoice)
+            return Response({
+                "message": "Invoice created successfully.",
+                "data": response_serializer.data
+            }, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def retrieve(self, request, pk):
         invoice = get_object_or_404(Invoice, pk=pk)
         # Allow access if the user is admin.
         if not request.user.is_staff:
-            # Otherwise, the user must be a company employer—that is,
+            # Otherwise, the user must be a company employer – that is,
             # they must have an associated company, and that company must match the invoice's.
             user_company = getattr(request.user, 'company', None)
             if not user_company or invoice.company != user_company:
@@ -63,17 +78,17 @@ class InvoiceViewSet(viewsets.ViewSet):
                     {"detail": "You do not have permission to access this invoice."},
                     status=status.HTTP_403_FORBIDDEN
                 )
-        serializer = InvoiceSerializer(invoice, context={'request': request})
+        serializer = InvoiceSerializer(invoice)
         return Response(serializer.data)
     
     def update(self, request, pk):
         invoice = get_object_or_404(Invoice, pk=pk)
         # Delegate permission enforcement (update permissions are handled by IsInvoiceAdmin).
         self.check_object_permissions(request, invoice)
-        serializer = InvoiceSerializer(invoice, data=request.data, partial=True, context={'request': request})
+        serializer = InvoiceSerializer(invoice, data=request.data, partial=True)
         if serializer.is_valid():
             updated_invoice = serializer.save()
-            response_serializer = InvoiceSerializer(updated_invoice, context={'request': request})
+            response_serializer = InvoiceSerializer(updated_invoice)
             return Response({
                 "message": "Invoice updated successfully.",
                 "data": response_serializer.data
