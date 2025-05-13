@@ -213,4 +213,20 @@ SIMPLE_JWT = {
 
 # SANDBOX MODE
 MERCHANT = "00000000-0000-0000-0000-000000000000"
-SANDBOX = True
+SANDBOX = False
+
+if SANDBOX:
+    sandbox = 'sandbox'
+else:
+    sandbox = 'www'
+
+# URL for sending a payment request
+ZP_API_REQUEST = f"https://{sandbox}.zarinpal.com/pg/rest/WebGate/PaymentRequest.json"
+
+# URL for verifying the transaction
+ZP_API_VERIFY = f"https://{sandbox}.zarinpal.com/pg/rest/WebGate/PaymentVerification.json"
+
+# URL for starting the payment (we’ll append the authority as a query parameter)
+ZP_API_STARTPAY = f"https://{sandbox}.zarinpal.com/pg/StartPay/"
+
+CallbackURL = 'http://127.0.0.1:8080/payments/verify/'  # Your callback URL
