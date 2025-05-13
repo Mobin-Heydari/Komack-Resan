@@ -1,6 +1,7 @@
 from django.db import models
 
 from Authentication.models import OneTimePassword
+from Users.models import User
 
 
 
@@ -11,6 +12,12 @@ class ResetPasswordOneTimePassword(models.Model):
         OneTimePassword,
         on_delete=models.CASCADE,
         verbose_name="کد اعتبار سنجی"
+    )
+
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name="کاربر"
     )
 
     phone = models.CharField(max_length=12, verbose_name="شماره تلفن")
