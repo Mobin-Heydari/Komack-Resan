@@ -32,6 +32,10 @@ class PaymentInvoice(models.Model):
         default=PaymentStatusChoices.PENDING,
         verbose_name='وضعیت پرداخت'
     )
+    
+    authority = models.CharField(max_length=50, null=True, blank=True)
+
+    timestamp = models.DateTimeField(auto_now_add=True, auto_now=False)
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ پرداخت')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='تاریخ به‌روزرسانی')
