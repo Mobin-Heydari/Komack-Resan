@@ -22,6 +22,7 @@ class InvoiceRouter(routers.DefaultRouter):
             path('', include([
                 # List endpoint: GET /invoices/
                 path('', InvoiceViewSet.as_view({'get': 'list'}), name='invoice-list'),
+                path('', InvoiceViewSet.as_view({'post': 'create'}), name='invoice-create'),
                 # Detail endpoints, keyed by primary key.
                 path('<str:pk>/', include([
                     # Retrieve endpoint: GET /invoices/<str:pk>/
