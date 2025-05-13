@@ -23,10 +23,10 @@ class InvoiceRouter(routers.DefaultRouter):
                 # List endpoint: GET /invoices/
                 path('', InvoiceViewSet.as_view({'get': 'list'}), name='invoice-list'),
                 # Detail endpoints, keyed by primary key.
-                path('<int:pk>/', include([
-                    # Retrieve endpoint: GET /invoices/<int:pk>/
+                path('<str:pk>/', include([
+                    # Retrieve endpoint: GET /invoices/<str:pk>/
                     path('', InvoiceViewSet.as_view({'get': 'retrieve'}), name='invoice-detail'),
-                    # Update endpoint: PUT/PATCH /invoices/<int:pk>/update/
+                    # Update endpoint: PUT/PATCH /invoices/<str:pk>/update/
                     path('update/', InvoiceViewSet.as_view({'put': 'update', 'patch': 'update'}), name='invoice-update'),
                 ]))
             ]))

@@ -51,7 +51,7 @@ class InvoiceViewSet(viewsets.ViewSet):
         serializer = InvoiceSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
     
-    def retrieve(self, request, pk=None):
+    def retrieve(self, request, pk):
         invoice = get_object_or_404(Invoice, pk=pk)
         # Allow access if the user is admin.
         if not request.user.is_staff:
@@ -66,7 +66,7 @@ class InvoiceViewSet(viewsets.ViewSet):
         serializer = InvoiceSerializer(invoice, context={'request': request})
         return Response(serializer.data)
     
-    def update(self, request, pk=None):
+    def update(self, request, pk):
         invoice = get_object_or_404(Invoice, pk=pk)
         # Delegate permission enforcement (update permissions are handled by IsInvoiceAdmin).
         self.check_object_permissions(request, invoice)
