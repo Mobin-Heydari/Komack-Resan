@@ -13,4 +13,5 @@ urlpatterns = [
     path('invoices/', include('Invoices.urls', namespace='Invoices')),
     path('payments/', include('Payments.urls', namespace='Payments')),
     path('addresses/', include('Addresses.urls', namespace='Addresses')),
+    path('accounts/', include('Accounts.urls', namespace='Accounts')),
 ]

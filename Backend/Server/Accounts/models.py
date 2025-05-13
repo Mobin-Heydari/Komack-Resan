@@ -11,7 +11,8 @@ class ResetPasswordOneTimePassword(models.Model):
     otp = models.ForeignKey(
         OneTimePassword,
         on_delete=models.CASCADE,
-        verbose_name="کد اعتبار سنجی"
+        verbose_name="کد اعتبار سنجی",
+        related_name="reset_password"
     )
 
     user = models.ForeignKey(

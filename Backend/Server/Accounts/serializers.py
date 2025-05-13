@@ -82,18 +82,22 @@ class ResetPasswordValidateOneTimePasswordSerializer(serializers.Serializer):
         otp_token = self.context.get('otp_token')
         
         otp = OneTimePassword.objects.get(token=otp_token)
+        try:
+            reset_password_otp = otp.reset_password.get()
+        except:
+            raise serializers.ValidationError('The otp is not a reset password otp.')
 
         if otp.status_validation() == 'ACT':
             if otp.code == attrs['code']:
                 # Check if the password and password_conf match
                 if attrs['password'] != attrs['password_conf']:
                     raise serializers.ValidationError('Passwords do not match')
-                if attrs['password'] == attrs['username']:
-                    raise serializers.ValidationError('Password cannot be the same as the username')
                 if len(attrs['password']) < 8 or len(attrs['password']) > 16:
                     raise serializers.ValidationError('Password must be between 8 and 16 characters long')
                 return attrs
             else:
                 raise serializers.ValidationError({'code': 'Invalid OTP code.'})
         else:
+            otp.delete()
+            reset_password_otp.delete()
             raise serializers.ValidationError('Inactive OTP')
