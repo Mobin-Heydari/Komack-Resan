@@ -628,3 +628,71 @@ class CompanyEmployeeSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
+
+
+class CompanyCardSerializer(serializers.ModelSerializer):
+    # Display the company name in read-only mode.
+    company = serializers.SlugRelatedField(read_only=True, slug_field='name')
+    # Write-only field to lookup the company via its slug.
+    company_slug = serializers.CharField(write_only=True, required=True)
+    
+    class Meta:
+        model = CompanyCard
+        fields = [
+            "id",
+            "company",
+            "company_slug",
+            "card_number",
+            "expiration_date",
+            "card_holder_name",
+            "created_at",
+            "updated_at"
+        ]
+        read_only_fields = [
+            "id", "company", "created_at", "updated_at"
+        ]
+    
+    def validate(self, attrs):
+        """
+        Validate that a valid company_slug is provided and attach
+        the corresponding Company object to the validated data.
+        """
+        company_slug = attrs.pop("company_slug")
+        try:
+            company = Company.objects.get(slug=company_slug)
+        except Company.DoesNotExist:
+            raise serializers.ValidationError({"company_slug": "Invalid company slug."})
+        attrs["company"] = company
+        return attrs
+
+    def create(self, validated_data):
+        """
+        Create a CompanyCard instance after
+         ensuring that the requesting user is either an admin or the company's employer.
+        """
+        request = self.context.get("request")
+        user = request.user
+        company = validated_data.get("company")
+        if not (user.is_staff or company.employer == user):
+            raise serializers.ValidationError({
+                "detail": "Only the company's employer or an admin is authorized to add a card."
+            })
+        return CompanyCard.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        Update the CompanyCard instance after ensuring that only an admin or
+         the company’s employer is authorized to modify the card details.
+        """
+        request = self.context.get("request")
+        user = request.user
+        if not (user.is_staff or instance.company.employer == user):
+            raise serializers.ValidationError({
+                "detail": "Only the company's employer or an admin is authorized to update this card."
+            })
+        instance.card_number = validated_data.get("card_number", instance.card_number)
+        instance.expiration_date = validated_data.get("expiration_date", instance.expiration_date)
+        instance.card_holder_name = validated_data.get("card_holder_name", instance.card_holder_name)
+        instance.save()
+        return instance
