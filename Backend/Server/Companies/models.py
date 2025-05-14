@@ -2,6 +2,7 @@ from django.db import models
 from django.utils import timezone
 from django.utils.text import slugify
 from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
 
 from Users.models import User
 from Industries.models import Industry
@@ -532,3 +533,48 @@ class CompanyAddress(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.address}"
+
+
+class CompanyCard(models.Model):
+
+    company = models.OneToOneField(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="company_card",
+        verbose_name="شرکت"
+    )
+
+    card_number = models.CharField(
+        max_length=16,
+        validators=[
+            RegexValidator(
+                regex=r'^\d{16}$',
+                message="Card number must consist of exactly 16 digits.",
+                code="invalid_card_number"
+            )
+        ],
+        verbose_name="شماره کارت"
+    )
+
+    expiration_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="تاریخ انقضا"
+    )
+
+    card_holder_name = models.CharField(
+        max_length=255,
+        null=True,
+        blank=True,
+        verbose_name="مالک"
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Created At")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Updated At")
+    
+    class Meta:
+        verbose_name = "کارت شرکت"
+        verbose_name_plural = "کارت های شرکت ها"
+    
+    def __str__(self):
+        return f"{self.company.name} کارته"
