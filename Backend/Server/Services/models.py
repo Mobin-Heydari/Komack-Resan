@@ -1,5 +1,5 @@
 from django.db import models
-from Companies.models import Company, CompanyEmployee
+from Companies.models import Company, CompanyEmployee, CompanyCard
 from Users.models import User
 from Addresses.models import RecipientAddress
 
@@ -29,6 +29,14 @@ class Service(models.Model):
         on_delete=models.CASCADE,
         related_name="service_company",
         verbose_name="شرکت"
+    )
+
+    company_card = models.ForeignKey(
+        CompanyCard,
+        on_delete=models.SET_NULL,
+        related_name="service_company_card",
+        verbose_name="کارت",
+        null=True, blank=True
     )
     
     service_provider = models.ForeignKey(
