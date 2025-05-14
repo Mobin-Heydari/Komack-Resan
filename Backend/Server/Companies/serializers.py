@@ -671,13 +671,6 @@ class CompanyCardSerializer(serializers.ModelSerializer):
         Create a CompanyCard instance after
          ensuring that the requesting user is either an admin or the company's employer.
         """
-        request = self.context.get("request")
-        user = request.user
-        company = validated_data.get("company")
-        if not (user.is_staff or company.employer == user):
-            raise serializers.ValidationError({
-                "detail": "Only the company's employer or an admin is authorized to add a card."
-            })
         return CompanyCard.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
@@ -685,12 +678,6 @@ class CompanyCardSerializer(serializers.ModelSerializer):
         Update the CompanyCard instance after ensuring that only an admin or
          the company’s employer is authorized to modify the card details.
         """
-        request = self.context.get("request")
-        user = request.user
-        if not (user.is_staff or instance.company.employer == user):
-            raise serializers.ValidationError({
-                "detail": "Only the company's employer or an admin is authorized to update this card."
-            })
         instance.card_number = validated_data.get("card_number", instance.card_number)
         instance.expiration_date = validated_data.get("expiration_date", instance.expiration_date)
         instance.card_holder_name = validated_data.get("card_holder_name", instance.card_holder_name)

@@ -7,6 +7,7 @@ from .models import(
     WorkDay,
     FirstItem,
     SecondItem,
+    CompanyCard,
     CompanyAddress,
     CompanyEmployee,
     CompanyFirstItem,
@@ -18,6 +19,7 @@ from .serializers import(
     WorkDaySerializer,
     FirstItemSerializer,
     SecondItemSerializer,
+    CompanyCardSerializer,
     CompanyAddressSerializer,
     CompanyEmployeeSerializer,
     CompanyFirstItemSerializer,
@@ -635,3 +637,98 @@ class CompanyAddressViewSet(viewsets.ViewSet):
             )
         instance.delete()
         return Response({"message": "Company address deleted."}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+class CompanyCardViewSet(viewsets.ViewSet):
+    """
+    ViewSet for managing CompanyCard objects.
+
+    Endpoints:
+        - list: GET /company-cards/
+            • If request.user is admin, returns all company cards.
+            • Otherwise, returns only the card for companies where the user is the employer.
+        - create: POST /company-cards/create/
+            • Only allowed if request.user is admin or matches company.employer.
+        - retrieve: GET /company-cards/<pk>/
+            • Only allowed if request.user is admin or matches the card's company employer.
+        - update: PUT/PATCH /company-cards/<pk>/update/
+            • Only allowed if request.user is admin or matches the card's company employer.
+        - destroy: DELETE /company-cards/<pk>/delete/
+            • Only allowed if request.user is admin or matches the card's company employer.
+    """
+
+    permission_classes = [IsAdminOrCompanyEmployer]
+    
+    def list(self, request):
+        if request.user.is_staff:
+            queryset = CompanyCard.objects.all()
+        else:
+            queryset = CompanyCard.objects.filter(company__employer=request.user)
+            if not queryset.exists():
+                return Response(
+                    {"detail": "No company card found for your company."},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        serializer = CompanyCardSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request):
+        serializer = CompanyCardSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            card = serializer.save()
+            response_serializer = CompanyCardSerializer(card, context={'request': request})
+            return Response(
+                {
+                    "message": "Company card created successfully.",
+                    "data": response_serializer.data
+                },
+                status=status.HTTP_201_CREATED
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, pk=None):
+        card = get_object_or_404(CompanyCard, pk=pk)
+        # Only admin or company employer can access.
+        if not request.user.is_staff and card.company.employer != request.user:
+            return Response(
+                {"detail": "You do not have permission to access this company card."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = CompanyCardSerializer(card, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def update(self, request, pk=None):
+        card = get_object_or_404(CompanyCard, pk=pk)
+        # Only admin or company employer can update.
+        if not request.user.is_staff and card.company.employer != request.user:
+            return Response(
+                {"detail": "You do not have permission to update this company card."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        serializer = CompanyCardSerializer(card, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            updated_card = serializer.save()
+            response_serializer = CompanyCardSerializer(updated_card, context={'request': request})
+            return Response(
+                {
+                    "message": "Company card updated successfully.",
+                    "data": response_serializer.data
+                },
+                status=status.HTTP_200_OK
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, pk=None):
+        card = get_object_or_404(CompanyCard, pk=pk)
+        # Only admin or company employer can delete.
+        if not request.user.is_staff and card.company.employer != request.user:
+            return Response(
+                {"detail": "You do not have permission to delete this company card."},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        card.delete()
+        return Response(
+            {"message": "Company card deleted successfully."},
+            status=status.HTTP_204_NO_CONTENT
+        )
