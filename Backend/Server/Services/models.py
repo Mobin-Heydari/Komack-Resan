@@ -20,6 +20,10 @@ class Service(models.Model):
         FAILED = 'FA', 'شکست خورده'
         REPORTED = 'RE', 'گزارش شده'
 
+    class PaymentMethodChoices(models.TextChoices):
+        CASH = 'CA', 'نقدی'
+        TRANSACTION = 'TR', 'کارت به کارت'
+
     company = models.ForeignKey(
         Company,
         on_delete=models.CASCADE,
@@ -64,6 +68,20 @@ class Service(models.Model):
         choices=ServiceStatusChoices.choices,
         default=ServiceStatusChoices.PENDING,
         verbose_name="وضعیت سرویس"
+    )
+
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethodChoices.choices,
+        verbose_name="روش پرداخت",
+        null=True, blank=True
+    )
+
+    transaction_screenshot = models.ImageField(
+        upload_to='Services/transaction_screenshots/',
+        null=True,
+        blank=True,
+        verbose_name="تصویر فاکتور تراکنش"
     )
 
     is_invoiced = models.BooleanField(
