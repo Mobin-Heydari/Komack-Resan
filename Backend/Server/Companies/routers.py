@@ -356,3 +356,32 @@ class CompanyAddressRouter(routers.DefaultRouter):
             path('<int:pk>/delete/', views.CompanyAddressViewSet.as_view({'delete': 'destroy'}), name='company_address-destroy'),
         ]
         return default_urls + custom_urls
+
+
+
+class CompanyCardRouter(routers.DefaultRouter):
+    """
+    Custom router for CompanyCardViewSet.
+
+    Endpoints:
+      - List:       GET    /company-cards/
+      - Create:     POST   /company-cards/create/
+      - Retrieve:   GET    /company-cards/<int:pk>/
+      - Update:     PUT/PATCH /company-cards/<int:pk>/update/
+      - Delete:     DELETE /company-cards/<int:pk>/delete/
+    """
+    def __init__(self):
+        super().__init__()
+        # Register the CompanyCardViewSet with an empty prefix so that the list endpoint
+        # appears at /company-cards/
+        self.register(r'', views.CompanyCardViewSet, basename='company_card')
+
+    def get_urls(self):
+        default_urls = super().get_urls()
+        custom_urls = [
+            path('create/', views.CompanyCardViewSet.as_view({'post': 'create'}), name='company_card-create'),
+            path('<int:pk>/', views.CompanyCardViewSet.as_view({'get': 'retrieve'}), name='company_card-detail'),
+            path('<int:pk>/update/', views.CompanyCardViewSet.as_view({'put': 'update', 'patch': 'update'}), name='company_card-update'),
+            path('<int:pk>/delete/', views.CompanyCardViewSet.as_view({'delete': 'destroy'}), name='company_card-destroy'),
+        ]
+        return default_urls + custom_urls
