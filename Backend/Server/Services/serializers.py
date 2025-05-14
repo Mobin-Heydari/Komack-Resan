@@ -7,6 +7,7 @@ from Addresses.models import RecipientAddress
 import uuid
 
 
+
 class ServiceSerializer(serializers.ModelSerializer):
     # Read-only fields for display.
     company = serializers.SlugRelatedField(read_only=True, slug_field='name')
@@ -24,6 +25,12 @@ class ServiceSerializer(serializers.ModelSerializer):
     # Write-only fields for assigning relations.
     company_slug = serializers.CharField(write_only=True, required=True)
     recipient_address_id = serializers.IntegerField(write_only=True, required=True)
+    
+    # New fields for payment method.
+    payment_method = serializers.ChoiceField(
+        choices=Service.PaymentMethodChoices.choices, required=False
+    )
+    transaction_screenshot = serializers.ImageField(required=False, allow_null=True)
     
     class Meta:
         model = Service
@@ -49,6 +56,8 @@ class ServiceSerializer(serializers.ModelSerializer):
             "updated_at",
             "overall_score",
             "time_elapsed",
+            "payment_method",
+            "transaction_screenshot",
         ]
         read_only_fields = [
             "company", 
@@ -73,22 +82,26 @@ class ServiceSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         """
         On creation:
-          • Use the provided company_slug to fetch the Company and validate that it’s open.
+          • Use company_slug to fetch the Company and validate its status.
           • Ensure title and descriptions are provided.
-          • Set the recepient automatically to the current user.
-          • Lookup the recipient address via recipient_address_id.
+          • Set recepient to the current user.
+          • Lookup recipient address via recipient_address_id.
           • Generate a random slug using UUID4.
-          • Disallow setting payment_status since only a service provider (or company owner) may do so.
+          • Disallow setting payment_status during creation.
         On update:
-          • Disallow changes to company (via company_slug).
-          • Only allow updating payment_status if the request.user is the service provider (or company owner).
-          • Only allow updating service_status if the request.user is the recipient.
-          • Allow updating the recipient address.
+          • Disallow changes to company.
+          • Only allow updating payment_status if request.user is the service_provider.
+          • Only allow updating service_status if request.user is the recepient.
+          • Allow updating recipient_address.
+        Additionally:
+          • Only a service recipient (user_type "SC") may choose a payment method.
+          • When payment_method is set to "transaction" by a service recipient,
+            the transaction_screenshot is not required immediately (can be provided later).
         """
         request = self.context.get("request")
         user = request.user
 
-        # Ensure title and descriptions are present.
+        # Ensure required text fields are present.
         if not attrs.get("title"):
             raise serializers.ValidationError({"title": "Title is required."})
         if not attrs.get("descriptions"):
@@ -110,6 +123,8 @@ class ServiceSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"company": "The company is currently off season."})
             attrs["company"] = company
 
+            attrs["service_provider"] = company.employer
+
             # Set recepient to current user.
             attrs["recepient"] = user
 
@@ -123,11 +138,11 @@ class ServiceSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({"recipient_address_id": "Recipient address not found."})
             attrs["recipient_address"] = recipient_address
 
-            # Do not allow setting payment_status during creation by a recipient.
+            # Do not allow setting payment_status during creation, as only trusted roles can set it.
             if "payment_status" in attrs:
                 raise serializers.ValidationError({"payment_status": "Not authorized to set payment status at creation."})
 
-            # Generate a random slug using uuid4.
+            # Generate a random slug.
             attrs["slug"] = str(uuid.uuid4())
         
         else:  # Update
@@ -137,14 +152,12 @@ class ServiceSerializer(serializers.ModelSerializer):
             # Only allow updating payment_status if request.user equals service_provider.
             if "payment_status" in attrs:
                 if user != self.instance.service_provider:
-                    # Optionally, if your Company model has an owner field, you may also check:
-                    # if not hasattr(self.instance.company, "owner") or user != self.instance.company.owner:
                     raise serializers.ValidationError({"payment_status": "Not authorized to update payment status."})
             # Only allow updating service_status if request.user is the recepient.
             if "service_status" in attrs:
                 if user != self.instance.recepient:
                     raise serializers.ValidationError({"service_status": "Only the recipient can update service status."})
-            # Process recipient_address update if provided.
+            # Process recipient_address update, if provided.
             if "recipient_address_id" in attrs:
                 recipient_address_id = attrs.pop("recipient_address_id")
                 try:
@@ -152,6 +165,17 @@ class ServiceSerializer(serializers.ModelSerializer):
                 except RecipientAddress.DoesNotExist:
                     raise serializers.ValidationError({"recipient_address_id": "Recipient address not found."})
                 attrs["recipient_address"] = recipient_address
+
+            # --- Validation for payment method ---
+            # If a payment_method is provided, only allow this update if the user is a service recipient (user_type "SC").
+            if "payment_method" in attrs:
+                if getattr(user, 'user_type', None) != "SC":
+                    raise serializers.ValidationError({
+                        "payment_method": "Only the service recipient may choose the payment method."
+                    })
+                # When choosing "transaction", we relax the screenshot requirement here;
+                # the recipient can provide the transaction_screenshot later.
+                # (If later a screenshot update is attempted, that will be handled in update logic.)
         
         return attrs
 
@@ -166,6 +190,8 @@ class ServiceSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
+
 
 
 
