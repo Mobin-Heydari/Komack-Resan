@@ -137,7 +137,7 @@ class UserLoginOneTimePasswordAPIView(APIView):
                             'code': otp_data['code']
                         }
                     },
-                    status=status.HTTP_201_CREATED
+                    status=status.HTTP_200_OK
                 )
             else:
                 return Response({'Detail': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
