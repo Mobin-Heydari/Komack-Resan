@@ -1,6 +1,6 @@
 from django.db import models
 
-from Authentication.models import OneTimePassword
+from OneTimePasswords.models import OneTimePassword
 from Users.models import User
 
 
