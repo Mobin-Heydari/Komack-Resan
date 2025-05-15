@@ -14,7 +14,7 @@ urlpatterns = [
 
     path('login/validate-otp/<str:token>/', views.UserLoginValidateOneTimePasswordAPIView.as_view()),
 
-    path('register-otp/', views.UserRegisterOneTimePasswordAPIView.as_view(), name="user_register_otp"),
+    path('register/', views.UserRegisterOneTimePasswordAPIView.as_view(), name="user_register_otp"),
 
-    path('validate-otp/<str:token>/', views.UserRegisterValidateOneTimePasswordAPIView.as_view(), name="user_register_otp_validate"),
+    path('register/validate-otp/<str:token>/', views.UserRegisterValidateOneTimePasswordAPIView.as_view(), name="user_register_otp_validate"),
 ]
