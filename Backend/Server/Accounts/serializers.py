@@ -4,7 +4,7 @@ from .models import ResetPasswordOneTimePassword
 
 from Users.models import User
 from Authentication.models import OneTimePassword
-from Authentication.serializers import OneTimePasswordSerializer
+from OneTimePasswords.serializers import OneTimePasswordSerializer
 
 from random import randint
 import uuid
