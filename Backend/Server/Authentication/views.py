@@ -1,9 +1,9 @@
 from django.shortcuts import get_object_or_404
 
 from rest_framework.views import APIView, Response
-from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -15,9 +15,8 @@ from .serializers import (
     UserLoginValidateOneTimePasswordSerializer
 )
 
-from .models import OneTimePassword, UserRegisterOTP, UserLoginOTP
-
 from Users.models import User
+from OneTimePasswords.models import OneTimePassword
 
 
 

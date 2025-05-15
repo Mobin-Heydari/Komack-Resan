@@ -4,11 +4,9 @@ from rest_framework.views import APIView, Response
 from rest_framework.validators import ValidationError
 from rest_framework import status
 
-from Users.models import User
-
 from .serializers import ResetPasswordOneTimePasswordSerializer, ResetPasswordValidateOneTimePasswordSerializer
 
-from Authentication.models import OneTimePassword
+from OneTimePasswords.models import OneTimePassword
 
 
 
