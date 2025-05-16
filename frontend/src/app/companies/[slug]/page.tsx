@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { Company } from "@/types/companies";
+import ServiceRequestForm from "@/components/serviceRequestForm";
 
 export default function CompanyDetail() {
   const { slug } = useParams();
@@ -178,6 +179,7 @@ export default function CompanyDetail() {
           </div>
         </div>
       )}
+      <ServiceRequestForm />
     </div>
   );
 }
