@@ -45,6 +45,7 @@ class CompanyViewSet(viewsets.ViewSet):
     - Create, Update, Destroy: Restricted to admin users or users with user_type 'OW'.
     """
     permission_classes = [IsAdminOrOwner]
+    lookup_field = 'slug'
 
     def list(self, request):
         if request.user.is_staff:

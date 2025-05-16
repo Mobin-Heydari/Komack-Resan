@@ -56,7 +56,7 @@ export default function Companies() {
                 </div>
               )}
               <div className="p-4">
-                <a className="text-xl font-semibold mb-2" href={`companies/detail/${company.slug}`}>{company.name}</a>
+                <a className="text-xl font-semibold mb-2" href={`companies/${company.slug}`}>{company.name}</a>
                 <p className="text-gray-600 text-sm">{company.description}</p>
                 {company.website && (
                   <a
