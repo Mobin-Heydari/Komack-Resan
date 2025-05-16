@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.urls import path, include
+from . import settings
+from django.conf.urls.static import static
 
 
 urlpatterns = [
@@ -14,4 +16,4 @@ urlpatterns = [
     path('payments/', include('Payments.urls', namespace='Payments')),
     path('addresses/', include('Addresses.urls', namespace='Addresses')),
     path('accounts/', include('Accounts.urls', namespace='Accounts')),
-]
+]   + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
