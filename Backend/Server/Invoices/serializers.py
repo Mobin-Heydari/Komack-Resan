@@ -34,8 +34,8 @@ class InvoiceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Invoice
         fields = [
-            'company', 'company_slug', 'total_amount', 'is_paid', 'deadline', 'deadline_status',
-            'created_at', 'updated_at', 'items',
+            'id', 'company', 'company_slug', 'total_amount', 'is_paid', 'deadline', 'deadline_status',
+            'created_at', 'updated_at', 'items'
         ]
         read_only_fields = ['company', 'created_at', 'updated_at']
 

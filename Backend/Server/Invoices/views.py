@@ -67,7 +67,7 @@ class InvoiceViewSet(viewsets.ViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def retrieve(self, request, pk):
-        invoice = get_object_or_404(Invoice, pk=pk)
+        invoice = get_object_or_404(Invoice, id=pk)
         # Allow access if the user is admin.
         if not request.user.is_staff:
             # Otherwise, the user must be a company employer – that is,
@@ -82,7 +82,7 @@ class InvoiceViewSet(viewsets.ViewSet):
         return Response(serializer.data)
     
     def update(self, request, pk):
-        invoice = get_object_or_404(Invoice, pk=pk)
+        invoice = get_object_or_404(Invoice, id=pk)
         # Delegate permission enforcement (update permissions are handled by IsInvoiceAdmin).
         self.check_object_permissions(request, invoice)
         serializer = InvoiceSerializer(invoice, data=request.data, partial=True)

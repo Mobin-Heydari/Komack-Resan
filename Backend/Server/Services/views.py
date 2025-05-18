@@ -19,7 +19,7 @@ class ServiceViewSet(viewsets.ViewSet):
     
     Note: The destroy method is not provided.
     """
-    permission_classes = []
+    permission_classes = [IsServiceActionAllowed]
     lookup_field = 'slug'
 
     def list(self, request):
