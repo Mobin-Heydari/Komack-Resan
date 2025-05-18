@@ -33,11 +33,11 @@ class IdCardInFormation(models.Model):
     )
 
     class Meta:
-        verbose_name = "اطلاعات carteau ملی"
+        verbose_name = "اطلاعات کارت ملی"
+        verbose_name_plural = "اطلاعات کارت ملی ها"
 
     def __str__(self):
-        id_val = self.id_card_number if self.id_card_number else "No ID"
-        return f"{id_val} - {self.get_id_card_status_display()}"
+        return f"اطلاعات کارت ملی کاربر : {self.id_card_info.username}"
 
 
 
