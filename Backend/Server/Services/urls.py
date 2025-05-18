@@ -11,6 +11,6 @@ service_employee_router = ServiceEmployeeRouter()
 
 
 urlpatterns = [
-    path('', include(service_router.get_urls())),
+    path('service/', include(service_router.get_urls())),
     path('employee/', include(service_employee_router.get_urls())),
 ]
