@@ -231,3 +231,68 @@ ZP_API_VERIFY = f"https://{sandbox}.zarinpal.com/pg/rest/WebGate/PaymentVerifica
 ZP_API_STARTPAY = f"https://{sandbox}.zarinpal.com/pg/StartPay/"
 
 CallbackURL = 'http://127.0.0.1:8080/payments/zarinpal-verify//'  # Your callback URL
+
+
+
+# settings.py
+
+# Jazzmin configuration
+JAZZMIN_SETTINGS = {
+    # Site title appearing in the window/tab title
+    "site_title": "Komak Resan | مدیریت",
+    
+    # Header text shown above the Django admin’s logo
+    "site_header": "Komak Resan",
+    
+    # Brand name for the side menu – often the same as the site header
+    "site_brand": "Komak Resan",
+    
+    # Welcome text on the login screen
+    "welcome_sign": "خوش آمدید به Komak Resan",
+    
+    # Copyright string (usually includes the current year)
+    "copyright": "© 2025 Komak Resan",
+    
+    # Whether to show the UI builder link in the admin header
+    "show_ui_builder": True,
+    
+    # Controls how the change form lays out the fields. Options include "vertical", "horizontal_tabs" or "collapsible"
+    "changeform_format": "horizontal_tabs",
+    
+    # The language code for the admin interface – "fa" for Persian
+    "language_code": "fa",
+    
+    # Whether to load Google Fonts from a CDN. Set to False if you prefer local fonts
+    "use_google_fonts_cdn": False,
+    
+    # Enable RTL (right-to-left) support for Persian
+    "rtl": True,
+    
+    # Optional: You can also specify a theme URL to use your own custom CSS
+    "theme_url": None,
+    
+    # Icon classes mapping (optional customization)
+    "icons": {
+        "auth": "fas fa-users",
+        "Sites": "fas fa-globe",
+        "Invoices": "fas fa-file-invoice-dollar",
+        "Users": "fas fa-user",
+    },
+}
+
+# Optional: UI tweaks allow you to fine-tune the appearance of various parts of Jazzmin
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_colour": "#3c8dbc",  # Blue shade for the brand area
+    "accent_colour": "#d2d6de",  # Default accent colour
+    "navbar_colour": "navbar-dark bg-primary",  # Navbar styling – dark navbar with primary background
+    "no_padding": False,
+    "sidebar_nav_small_text": True,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": True,
+    "sidebar_nav_compact_style": True,
+    "sidebar_nav_animation_speed": 300,  # Speed of sidebar animations (in ms)
+    "sidebar_nav_icon_style": "fa fa-fw",  # Icon style for the sidebar
+}
