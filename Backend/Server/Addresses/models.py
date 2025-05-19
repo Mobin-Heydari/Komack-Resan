@@ -8,6 +8,11 @@ class Province(models.Model):
 
     slug = models.SlugField(max_length=100, unique=True, blank=True, verbose_name="اسلاگ")
 
+    class Meta:
+        verbose_name = "استان"
+        verbose_name_plural = "استان ها"
+    
+
     def save(self, *args, **kwargs):
         if not self.slug:
             self.slug = slugify(self.name)
@@ -15,6 +20,7 @@ class Province(models.Model):
 
     def __str__(self):
         return self.name
+    
 
 
 class City(models.Model):
@@ -27,6 +33,11 @@ class City(models.Model):
     name = models.CharField(max_length=100, verbose_name="نام")
 
     slug = models.SlugField(max_length=100, unique=True, blank=True, verbose_name="اسلاگ")
+
+    class Meta:
+        verbose_name = "شهر"
+        verbose_name_plural = "شهر ها"
+
 
     def save(self, *args, **kwargs):
         if not self.slug:
