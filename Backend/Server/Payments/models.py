@@ -40,6 +40,12 @@ class PaymentInvoice(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='تاریخ پرداخت')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='تاریخ به‌روزرسانی')
 
+
+    class Meta:
+        verbose_name = "پرداخت قبض"
+        verbose_name_plural = "پرداخت قبض ها"
+
+
     def __str__(self):
         return f"Payment for Invoice #{self.invoice.id} - {self.get_payment_status_display()}"
 
