@@ -37,6 +37,7 @@ class UserRegisterOTP(models.Model):
 
     class Meta:
         verbose_name = "رمز یکبار مصرف ثبت نام کاربر"
+        verbose_name_plural = "رمز های یکبار مصرف ثبت نام کاربر"
 
     def __str__(self):
         return f"{self.username} - {self.otp.token} - {self.user_type}"
