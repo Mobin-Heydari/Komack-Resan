@@ -38,7 +38,7 @@ class Industry(models.Model):
 
     class Meta:
         verbose_name = "صنعت"
-        verbose_name_plural = "صنایع"
+        verbose_name_plural = "صنعت ها"
         ordering = ['name']
 
     def save(self, *args, **kwargs):
