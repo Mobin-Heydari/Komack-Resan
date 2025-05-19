@@ -37,6 +37,7 @@ class OneTimePassword(models.Model):
 
     class Meta:
         verbose_name = "رمز یکبار مصرف"
+        verbose_name_plural = "رمز های یکبار مصرف"
 
     def __str__(self):
         return f'{self.status}----{self.code}----{self.token}'
