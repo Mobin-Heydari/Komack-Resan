@@ -33,12 +33,12 @@ class Invoice(models.Model):
         verbose_name="وضعیت مهلت"
     )
     
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ صدور فاکتور")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ صدور قبض")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
 
     class Meta:
-        verbose_name = "فاکتور"
-        verbose_name_plural = "فاکتورها"
+        verbose_name = "قبض"
+        verbose_name_plural = "قبض ها"
     
     def calculate_total(self):
         total = sum(item.amount for item in self.items.all())
@@ -77,7 +77,7 @@ class InvoiceItem(models.Model):
         Invoice,
         on_delete=models.CASCADE,
         related_name='items',
-        verbose_name="فاکتور مربوطه"
+        verbose_name="قبض مربوطه"
     )
     service = models.ForeignKey(
         Service,
@@ -89,8 +89,8 @@ class InvoiceItem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ثبت مورد")
 
     class Meta:
-        verbose_name = "آیتم فاکتور"
-        verbose_name_plural = "آیتم‌های فاکتور"
+        verbose_name = "آیتم قبض"
+        verbose_name_plural = "آیتم‌های قبض"
     
     def save(self, *args, **kwargs):
         # In our simple scenario, one service corresponds to one invoice item.
