@@ -15,7 +15,7 @@ export default function ServicesList() {
         const data: Service[] = await res.json();
         setServices(data);
       } catch (error) {
-        console.error("Error fetching services:", error);
+        console.error("خطا در دریافت خدمات:", error);
       } finally {
         setLoading(false);
       }
@@ -25,140 +25,31 @@ export default function ServicesList() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-xl">Loading Services...</p>
+      <div className="flex items-center justify-center h-screen" dir="rtl">
+        <p className="text-xl">در حال بارگذاری خدمات...</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-4xl font-bold mb-8 text-center">Services</h1>
+    <div className="container mx-auto py-8 px-4" dir="rtl">
+      <h1 className="text-4xl font-bold mb-8 text-center">خدمات</h1>
       {services.length === 0 ? (
-        <p className="text-center text-gray-600">No services available.</p>
+        <p className="text-center text-gray-600">هیچ خدماتی موجود نیست.</p>
       ) : (
-        <div className="grid grid-cols-1 gap-8">
+        <div className="grid grid-cols-1 gap-4">
           {services.map((service) => (
             <div
               key={service.id}
-              className="bg-white shadow-lg rounded-lg overflow-hidden"
+              className="bg-white shadow rounded p-4 flex justify-between items-center"
             >
-              <div className="p-6">
-                {/* Basic Info */}
-                <div className="mb-4">
-                  <h2 className="text-3xl font-bold">{service.title}</h2>
-                  <p className="text-gray-600">{service.descriptions}</p>
-                </div>
-
-                {/* Transaction Details (Small Grid) */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-                  <div className="flex items-center justify-center">
-                    {service.transaction_screenshot ? (
-                      <img
-                        src={service.transaction_screenshot}
-                        alt="Transaction"
-                        className="w-24 h-24 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="w-24 h-24 bg-gray-300 flex items-center justify-center">
-                        <span className="text-xs text-gray-600">No Image</span>
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <p>
-                      <span className="font-semibold">Payment Method:</span>{" "}
-                      {service.payment_method}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Payment Status:</span>{" "}
-                      {service.payment_status_display} (
-                      {service.payment_status})
-                    </p>
-                  </div>
-                  <div>
-                    <p>
-                      <span className="font-semibold">Time Elapsed:</span>{" "}
-                      {service.time_elapsed} sec
-                    </p>
-                    <p>
-                      <span className="font-semibold">Overall Score:</span>{" "}
-                      {service.overall_score !== null
-                        ? service.overall_score
-                        : "N/A"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Service Basic Info Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p>
-                      <span className="font-semibold">Company:</span>{" "}
-                      {service.company}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Provider:</span>{" "}
-                      {service.service_provider}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Recipient Address:</span>{" "}
-                      {service.recipient_address}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Company Card:</span>{" "}
-                      {service.company_card ? service.company_card : "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p>
-                      <span className="font-semibold">Slug:</span> {service.slug}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Service Status:</span>{" "}
-                      {service.service_status_display} (
-                      {service.service_status})
-                    </p>
-                    <p>
-                      <span className="font-semibold">Invoiced:</span>{" "}
-                      {service.is_invoiced ? "Yes" : "No"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Date and Time Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <p>
-                      <span className="font-semibold">Started At:</span>{" "}
-                      {new Date(service.started_at).toLocaleString()}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Finished At:</span>{" "}
-                      {new Date(service.finished_at).toLocaleString()}
-                    </p>
-                  </div>
-                  <div>
-                    <p>
-                      <span className="font-semibold">Created At:</span>{" "}
-                      {new Date(service.created_at).toLocaleString()}
-                    </p>
-                    <p>
-                      <span className="font-semibold">Updated At:</span>{" "}
-                      {new Date(service.updated_at).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <Link
-                    href={`/services/${service.slug}`}
-                    className="inline-block px-6 py-2 bg-green-600 text-white rounded hover:bg-green-500"
-                  >
-                    View Details
-                  </Link>
-                </div>
-              </div>
+              <span className="text-xl">{service.title}</span>
+              <Link
+                href={`/services/${service.slug}`}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-500"
+              >
+                مشاهده
+              </Link>
             </div>
           ))}
         </div>
