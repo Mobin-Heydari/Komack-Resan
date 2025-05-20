@@ -3,13 +3,11 @@
 import { useState } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 
-
-
 export default function RegistrationOTPVerificationPage() {
   const router = useRouter();
   const { token } = useParams();
   const searchParams = useSearchParams();
-  // For testing: retrieve the OTP code from the query parameter
+  // برای تست: دریافت کد یکبارمصرف از طریق پارامتر query
   const testOTP = searchParams.get("code") ?? "";
   const [code, setcode] = useState<string>("");
   const [error, setError] = useState<string>("");
@@ -29,28 +27,31 @@ export default function RegistrationOTPVerificationPage() {
       );
       const data = await res.json();
       if (res.ok) {
-        // On successful OTP verification, redirect the user to the dashboard or login page.
+        // در صورت موفقیت‌آمیز بودن تأیید کد، کاربر به داشبورد یا صفحه ورود هدایت می‌شود.
         router.push("/");
       } else {
-        setError(data.error || "OTP verification failed!");
+        setError(data.error || "تأیید کد یکبارمصرف ناموفق بود!");
       }
     } catch (err) {
-      setError("An error occurred during OTP verification.");
+      setError("خطایی در هنگام تأیید کد یکبارمصرف رخ داد.");
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 mt-10 bg-white shadow rounded">
-      <h1 className="text-2xl font-bold text-center mb-4">OTP Verification</h1>
+    <div
+      className="max-w-md mx-auto p-6 mt-10 bg-white shadow rounded"
+      dir="rtl"
+    >
+      <h1 className="text-2xl font-bold text-center mb-4">تأیید کد یکبارمصرف</h1>
       <div className="mb-4">
         <p className="text-sm text-gray-600">
-          For testing, your OTP code is:{" "}
+          برای تست، کد یکبارمصرف شما:{" "}
           <span className="font-bold">{testOTP}</span>
         </p>
       </div>
       <form onSubmit={handleOTPVerification}>
         <div className="mb-4">
-          <label htmlFor="code" className="block mb-1">Enter OTP:</label>
+          <label htmlFor="code" className="block mb-1">کد یکبارمصرف را وارد کنید:</label>
           <input
             type="text"
             id="code"
@@ -64,7 +65,7 @@ export default function RegistrationOTPVerificationPage() {
           type="submit"
           className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors"
         >
-          Verify OTP
+          تأیید کد
         </button>
       </form>
       {error && <p className="mt-4 text-red-500">{error}</p>}
