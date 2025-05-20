@@ -19,24 +19,29 @@ export default function OTPRequestPage() {
         body: JSON.stringify({ phone }),
       });
       const data = await res.json();
-      if (res.ok && data.Details.token && data.Details.code) {
-        // Redirect with the token as a path parameter and the OTP code as a query param for testing.
-        router.push(`/auth/login/otp/${data.Details.token}?code=${data.Details.code}`);
+      if (res.ok && data.Detail.token && data.Detail.code) {
+        router.push(`/auth/login/otp/${data.Detail.token}?code=${data.Detail.code}`);
       } else {
-        setError(data.error || "OTP request failed!");
-    }
+        setError(data.error || "درخواست کد یکبارمصرف ناموفق بود!");
+      }
+
     } catch (err) {
-        setError("An error occurred while requesting OTP.");
+      setError("خطایی در درخواست کد یکبارمصرف رخ داد.");
     }
   };
 
   return (
-    <div className="max-w-md mx-auto p-6 mt-10 bg-white shadow rounded">
-      <h1 className="text-2xl font-bold text-center mb-4">OTP Login Request</h1>
+    <div
+      className="max-w-md mx-auto p-6 mt-10 bg-white shadow rounded"
+      dir="rtl"
+    >
+      <h1 className="text-2xl font-bold text-center mb-4">
+        درخواست ورود با کد یکبارمصرف
+      </h1>
       <form onSubmit={handleOTPRequest}>
         <div className="mb-4">
           <label htmlFor="phone" className="block mb-1">
-            Phone:
+            شماره تلفن:
           </label>
           <input
             type="text"
@@ -51,7 +56,7 @@ export default function OTPRequestPage() {
           type="submit"
           className="w-full py-2 px-4 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition-colors"
         >
-          Request OTP
+          درخواست کد یکبارمصرف
         </button>
       </form>
       {error && <p className="mt-4 text-red-500">{error}</p>}

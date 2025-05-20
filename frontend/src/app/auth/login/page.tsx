@@ -75,6 +75,12 @@ export default function PasswordLoginPage() {
           ثبت نام
         </a>
       </p>
+      <p className="text-center mt-4">
+          ورورد با رمز یکبار مصرف{" "}
+        <a href="/auth/login/otp" className="text-blue-600 hover:underline">
+          دریافت کد یکبار مصرف
+        </a>
+      </p>
     </div>
   );
 }
