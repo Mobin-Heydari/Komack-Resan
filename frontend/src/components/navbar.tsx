@@ -45,10 +45,10 @@ export default function Navbar() {
           {/* Right-side links for login/register */}
           <div className="flex items-center">
             <div className="hidden md:flex md:items-center md:space-x-reverse md:space-x-4">
-              <Link href="/login" className="text-white hover:text-cyan-300">
+              <Link href="/auth/login" className="text-white hover:text-cyan-300">
                 ورود
               </Link>
-              <Link href="/register" className="text-white hover:text-cyan-300">
+              <Link href="/auth/register" className="text-white hover:text-cyan-300">
                 ثبت نام
               </Link>
             </div>
