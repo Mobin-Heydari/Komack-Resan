@@ -71,7 +71,7 @@ export default function PasswordLoginPage() {
       {error && <p className="mt-4 text-red-500">{error}</p>}
       <p className="text-center mt-4">
         ثبت نام نکرده‌اید؟{" "}
-        <a href="/register" className="text-blue-600 hover:underline">
+        <a href="/auth/register" className="text-blue-600 hover:underline">
           ثبت نام
         </a>
       </p>
