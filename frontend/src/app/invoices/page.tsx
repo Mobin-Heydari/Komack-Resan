@@ -14,25 +14,20 @@ export default function InvoicesList() {
         const res = await fetch("http://127.0.0.1:8000/invoices/");
         const data = await res.json();
 
-        console.log("Fetched data:", data);
+        console.log("داده‌های واکشی شده:", data);
 
-        // If the returned data is an array, use it directly.
+        // اگر داده برگشتی آرایه است، مستقیم استفاده می‌کنیم.
         if (Array.isArray(data)) {
           setInvoices(data);
         } else if (data && typeof data === "object") {
-          // If the API returns a single invoice object or an object with a property,
-          // adjust accordingly. For example, if it's a single invoice:
-          // setInvoices([data]);
-          // If data is wrapped in a property like 'results':
-          // setInvoices(data.results || []);
-
-          // Here we'll assume it's not an array and set an empty array.
+          // اگر API یک شی واحد یا ابجکتی با یک ویژگی برمی‌گرداند،
+          // لازم است بر اساس وضعیت خودتان آن را تنظیم کنید.
           setInvoices([]);
         } else {
           setInvoices([]);
         }
       } catch (error) {
-        console.error("Error fetching invoices:", error);
+        console.error("خطا در دریافت فاکتورها:", error);
       } finally {
         setLoading(false);
       }
@@ -42,17 +37,17 @@ export default function InvoicesList() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <p className="text-xl">Loading Invoices...</p>
+      <div className="flex items-center justify-center h-screen" dir="rtl">
+        <p className="text-xl">در حال بارگذاری فاکتورها...</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <h1 className="text-4xl font-bold mb-8 text-center">Invoices</h1>
+    <div className="container mx-auto py-8 px-4" dir="rtl">
+      <h1 className="text-4xl font-bold mb-8 text-center">فاکتورها</h1>
       {invoices.length === 0 ? (
-        <p className="text-center text-gray-600">No invoices available.</p>
+        <p className="text-center text-gray-600">هیچ فاکتوری موجود نیست.</p>
       ) : (
         <div className="grid grid-cols-1 gap-8">
           {invoices.map((invoice) => (
@@ -62,24 +57,23 @@ export default function InvoicesList() {
             >
               <div className="mb-4">
                 <h2 className="text-2xl font-bold">
-                  {invoice.company} —&nbsp;
-                  {invoice.total_amount.toLocaleString()} تومان
+                  {invoice.company} — {invoice.total_amount.toLocaleString()} تومان
                 </h2>
                 <p className="text-gray-600">
-                  {invoice.is_paid ? "Paid" : "Not Paid"} &bull; Deadline:{" "}
-                  {new Date(invoice.deadline).toLocaleString()} (
+                  {invoice.is_paid ? "پرداخت شده" : "پرداخت نشده"} &bull; مهلت:{" "}
+                  {new Date(invoice.deadline).toLocaleString("fa-IR")} (
                   {invoice.deadline_status})
                 </p>
               </div>
 
               <div className="text-sm text-gray-500 mb-4">
                 <p>
-                  <span className="font-semibold">Created:</span>{" "}
-                  {new Date(invoice.created_at).toLocaleString()}
+                  <span className="font-semibold">ایجاد شده:</span>{" "}
+                  {new Date(invoice.created_at).toLocaleString("fa-IR")}
                 </p>
                 <p>
-                  <span className="font-semibold">Updated:</span>{" "}
-                  {new Date(invoice.updated_at).toLocaleString()}
+                  <span className="font-semibold">به‌روزرسانی شده:</span>{" "}
+                  {new Date(invoice.updated_at).toLocaleString("fa-IR")}
                 </p>
               </div>
 
@@ -87,7 +81,7 @@ export default function InvoicesList() {
                 href={`/invoices/${invoice.id}`}
                 className="inline-block px-6 py-2 bg-green-600 text-white rounded hover:bg-green-500"
               >
-                View Details
+                مشاهده جزئیات
               </Link>
             </div>
           ))}
