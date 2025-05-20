@@ -37,13 +37,25 @@ export interface CompanySecondItem {
   compay: number;
 }
 
+// New interface for a workday
+export interface Workday {
+  company: number;
+  day_of_week: string;         // e.g. "monday"
+  day_of_week_display: string; // e.g. "دوشنبه"
+  open_time: string;           // e.g. "17:38:48"
+  close_time: string;          // e.g. "17:38:49"
+  is_closed: boolean;
+  time_range: string;          // e.g. "17:38 - 17:38"
+  is_open_now: boolean;
+}
+
 export interface Company {
   id: number;
   logo: string | null;
   banner: string;
   intro_video: string | null;
   validation_status: ValidationStatus;
-  workdays: any[]; // update this type if you have a detailed structure for workdays
+  workdays: Workday[]; // updated to use Workday[]
   companies_first_item: CompanyFirstItem[];
   companies_second_item: CompanySecondItem[];
   name: string;

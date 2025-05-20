@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Company } from "@/types/companies";
-import { useRouter } from "next/router";
-
 
 export default function Companies() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -16,7 +14,7 @@ export default function Companies() {
         const data: Company[] = await res.json();
         setCompanies(data);
       } catch (error) {
-        console.error("Error fetching companies:", error);
+        console.error("خطا در دریافت اطلاعات شرکت‌ها:", error);
       } finally {
         setLoading(false);
       }
@@ -26,17 +24,17 @@ export default function Companies() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-xl">Loading...</p>
+      <div className="flex justify-center items-center h-screen" dir="rtl">
+        <p className="text-xl">در حال بارگذاری...</p>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center">Companies</h1>
+    <div className="container mx-auto py-8" dir="rtl">
+      <h1 className="text-3xl font-bold mb-6 text-center">شرکت‌ها</h1>
       {companies.length === 0 ? (
-        <p className="text-center text-gray-600">No companies found.</p>
+        <p className="text-center text-gray-600">شرکتی یافت نشد.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {companies.map((company) => (
@@ -47,16 +45,21 @@ export default function Companies() {
               {company.banner ? (
                 <img
                   src={company.banner}
-                  alt={`${company.name} Banner`}
+                  alt={`بنر ${company.name}`}
                   className="w-full h-40 object-cover"
                 />
               ) : (
                 <div className="w-full h-40 bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500">No Banner</span>
+                  <span className="text-gray-500">بنری موجود نیست</span>
                 </div>
               )}
               <div className="p-4">
-                <a className="text-xl font-semibold mb-2" href={`companies/${company.slug}`}>{company.name}</a>
+                <a
+                  className="text-xl font-semibold mb-2 inline-block"
+                  href={`companies/${company.slug}`}
+                >
+                  {company.name}
+                </a>
                 <p className="text-gray-600 text-sm">{company.description}</p>
                 {company.website && (
                   <a
@@ -65,7 +68,7 @@ export default function Companies() {
                     rel="noopener noreferrer"
                     className="text-blue-500 hover:underline mt-2 inline-block"
                   >
-                    Visit Website
+                    مشاهده وبسایت
                   </a>
                 )}
               </div>
