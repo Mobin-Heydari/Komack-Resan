@@ -5,6 +5,7 @@ from .views import (
     ServiceRecipientProfileViewSet,
     AdminProfileViewSet,
     SupportProfileViewSet,
+    OwnerProfileViewSet,
 )
 
 
@@ -78,6 +79,26 @@ class SupportRouter(routers.DefaultRouter):
                 path('', SupportProfileViewSet.as_view({'get': 'list'})),
                 path('<str:user__username>/', include([
                     path('', SupportProfileViewSet.as_view({'get': 'retrieve', 'put': 'update'})),
+                ])),
+            ])),
+        ]
+        return urls + custom_urls
+    
+
+
+class OwnerRouter(routers.DefaultRouter):
+    
+    def __init__(self):
+        super().__init__()
+        self.register(r'', OwnerProfileViewSet, basename='service-support')
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('', include([
+                path('', OwnerProfileViewSet.as_view({'get': 'list'})),
+                path('<str:user__username>/', include([
+                    path('', OwnerProfileViewSet.as_view({'get': 'retrieve', 'put': 'update'})),
                 ])),
             ])),
         ]
