@@ -4,7 +4,8 @@ from .models import (
     ServiceProviderProfile,
     ServiceRecipientProfile,
     AdminProfile,
-    SupportProfile
+    SupportProfile,
+    OwnerProfile
 )
 
 
@@ -74,6 +75,26 @@ class AdminProfileSerializer(serializers.ModelSerializer):
 class SupportProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupportProfile
+        fields = '__all__'
+        read_only_fields = ('user', 'created_at', 'updated_at')
+
+    def validate(self, attrs):
+        request = self.context.get("request")
+        if not request:
+            raise serializers.ValidationError("Request object is required in the context.")
+
+        if self.instance and self.instance.user != request.user and not request.user.is_staff:
+            raise PermissionDenied("You do not have permission to update this profile.")
+
+        return attrs
+
+    def update(self, instance, validated_data):
+        return super().update(instance, validated_data)
+    
+
+class OwnerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OwnerProfile
         fields = '__all__'
         read_only_fields = ('user', 'created_at', 'updated_at')
 
