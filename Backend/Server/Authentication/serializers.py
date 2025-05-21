@@ -4,7 +4,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import UserRegisterOTP, UserLoginOTP
 
-from Users.models import User, IdCardInFormation
+from Users.models import User
 from OneTimePasswords.models import OneTimePassword
 
 from random import randint
@@ -212,8 +212,6 @@ class UserRegisterValidateOneTimePasswordSerializer(serializers.Serializer):
 
         user_register_otp = otp.registration_otps
 
-        id_card_info = IdCardInFormation.objects.create()
-
         user = User.objects.create_user(
             email=user_register_otp.email,
             phone=user_register_otp.phone,
@@ -222,8 +220,6 @@ class UserRegisterValidateOneTimePasswordSerializer(serializers.Serializer):
             full_name=user_register_otp.full_name,
             user_type=user_register_otp.user_type
         )
-
-        user.id_card_info = id_card_info
 
         user.save()
 
