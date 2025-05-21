@@ -8,12 +8,14 @@ from .models import (
     ServiceRecipientProfile,
     AdminProfile,
     SupportProfile,
+    OwnerProfile,
 )
 from .serializers import (
     ServiceProviderProfileSerializer,
     ServiceRecipientProfileSerializer,
     AdminProfileSerializer,
     SupportProfileSerializer,
+    OwnerProfileSerializer,
 )
 
 
@@ -187,6 +189,51 @@ class SupportProfileViewSet(viewsets.ViewSet):
         if request.user.is_staff or request.user.username == user__username:
             profile = get_object_or_404(SupportProfile, user__username=user__username)
             serializer = SupportProfileSerializer(profile, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(
+                {"error": "شما اجازه ویرایش این محتوا را ندارید"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+
+
+class OwnerProfileViewSet(viewsets.ViewSet):
+
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'user__username'
+
+    def list(self, request, *args, **kwargs):
+        if request.user.is_staff:
+            queryset = OwnerProfile.objects.all()
+            serializer = OwnerProfileSerializer(queryset, many=True)
+            return Response(serializer.data)
+        else:
+            return Response(
+                {"error": "شما اجازه مشاهده این محتوا را ندارید"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+
+    def retrieve(self, request, user__username, *args, **kwargs):
+        if request.user.is_staff or request.user.username == user__username:
+            profile = get_object_or_404(OwnerProfile, user__username=user__username)
+            serializer = OwnerProfileSerializer(profile)
+            return Response(serializer.data)
+        else:
+            return Response(
+                {"error": "شما اجازه مشاهده این محتوا را ندارید"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+
+    def update(self, request, user__username, *args, **kwargs):
+        if request.user.is_staff or request.user.username == user__username:
+            profile = get_object_or_404(OwnerProfile, user__username=user__username)
+            serializer = OwnerProfileSerializer(profile, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
