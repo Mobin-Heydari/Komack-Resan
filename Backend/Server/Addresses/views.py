@@ -24,6 +24,7 @@ class ProvinceViewSet(viewsets.ViewSet):
       - destroy:  DELETE /provinces/<slug>/delete/       (Admin only)
     """
     permission_classes = [CityProvinceAdminPermission]
+    lookup_field = 'slug'
 
     def list(self, request):
         queryset = Province.objects.all()
@@ -82,6 +83,7 @@ class CityViewSet(viewsets.ViewSet):
       - destroy:  DELETE /cities/<slug>/delete/          (Admin only)
     """
     permission_classes = [CityProvinceAdminPermission]
+    lookup_field = "slug"
 
     def list(self, request):
         queryset = City.objects.all()

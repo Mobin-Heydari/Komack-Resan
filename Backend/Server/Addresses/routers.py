@@ -39,22 +39,22 @@ class AddressRouter(routers.DefaultRouter):
         default_urls = super().get_urls()
         custom_urls = [
             # Province endpoints using slug for lookup.
-            path('provinces/create/', ProvinceViewSet.as_view({'post': 'create'}), name='province-create'),
+            path('provinces/', ProvinceViewSet.as_view({'post': 'create'}), name='province-create'),
             path('provinces/<slug:slug>/', ProvinceViewSet.as_view({'get': 'retrieve'}), name='province-detail'),
-            path('provinces/<slug:slug>/update/', ProvinceViewSet.as_view({'put': 'update', 'patch': 'update'}), name='province-update'),
-            path('provinces/<slug:slug>/delete/', ProvinceViewSet.as_view({'delete': 'destroy'}), name='province-destroy'),
+            path('provinces/<slug:slug>/', ProvinceViewSet.as_view({'put': 'update', 'patch': 'update'}), name='province-update'),
+            path('provinces/<slug:slug>/', ProvinceViewSet.as_view({'delete': 'destroy'}), name='province-destroy'),
 
             # City endpoints using slug for lookup.
-            path('cities/create/', CityViewSet.as_view({'post': 'create'}), name='city-create'),
+            path('cities/', CityViewSet.as_view({'post': 'create'}), name='city-create'),
             path('cities/<slug:slug>/', CityViewSet.as_view({'get': 'retrieve'}), name='city-detail'),
-            path('cities/<slug:slug>/update/', CityViewSet.as_view({'put': 'update', 'patch': 'update'}), name='city-update'),
-            path('cities/<slug:slug>/delete/', CityViewSet.as_view({'delete': 'destroy'}), name='city-destroy'),
+            path('cities/<slug:slug>/', CityViewSet.as_view({'put': 'update', 'patch': 'update'}), name='city-update'),
+            path('cities/<slug:slug>/', CityViewSet.as_view({'delete': 'destroy'}), name='city-destroy'),
 
             # RecipientAddress endpoints using pk for lookup.
-            path('recipient-addresses/create/', RecipientAddressViewSet.as_view({'post': 'create'}), name='recipient_address-create'),
+            path('recipient-addresses/', RecipientAddressViewSet.as_view({'post': 'create'}), name='recipient_address-create'),
             path('recipient-addresses/<int:pk>/', RecipientAddressViewSet.as_view({'get': 'retrieve'}), name='recipient_address-detail'),
-            path('recipient-addresses/<int:pk>/update/', RecipientAddressViewSet.as_view({'put': 'update', 'patch': 'update'}), name='recipient_address-update'),
-            path('recipient-addresses/<int:pk>/delete/', RecipientAddressViewSet.as_view({'delete': 'destroy'}), name='recipient_address-destroy'),
+            path('recipient-addresses/<int:pk>/', RecipientAddressViewSet.as_view({'put': 'update', 'patch': 'update'}), name='recipient_address-update'),
+            path('recipient-addresses/<int:pk>/', RecipientAddressViewSet.as_view({'delete': 'destroy'}), name='recipient_address-destroy'),
         ]
         # Concatenate the default URLs (like list endpoints) with our custom URLs.
         return default_urls + custom_urls

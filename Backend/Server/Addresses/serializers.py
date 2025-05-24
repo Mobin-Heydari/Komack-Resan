@@ -9,7 +9,6 @@ class ProvinceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Province
         fields = ['id', 'name', 'slug']
-        read_only_fields = ['slug']
 
     def create(self, validated_data):
         # The model's save() method will generate the slug if missing.
@@ -18,6 +17,7 @@ class ProvinceSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance.name = validated_data.get('name', instance.name)
+        instance.slug = validated_data.get('slug', instance.slug)
         instance.save()
         return instance
 
@@ -36,7 +36,6 @@ class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
         fields = ['id', 'province', 'province_slug', 'name', 'slug']
-        read_only_fields = ['slug']
     
     def validate(self, attrs):
         # Use the provided province_slug to get the Province instance.
@@ -72,6 +71,7 @@ class CitySerializer(serializers.ModelSerializer):
                 })
             instance.province = province
         instance.name = validated_data.get('name', instance.name)
+        instance.slug = validated_data.get('slug', instance.slug)
         instance.save()
         return instance
 
