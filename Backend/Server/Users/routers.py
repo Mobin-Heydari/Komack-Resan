@@ -16,9 +16,7 @@ class IdCardRouter(routers.DefaultRouter):
         custom_urls = [
             path('', include([
                 path('', IdCardViewSet.as_view({'get': 'list'})),
-                path('<int:pk>/', include([
-                    path('', IdCardViewSet.as_view({'get': 'retrieve', 'put': 'update'})),
-                ])),
+                path('<int:pk>/', IdCardViewSet.as_view({'get': 'retrieve', 'put': 'update'})),
             ])),
         ]
         return urls + custom_urls

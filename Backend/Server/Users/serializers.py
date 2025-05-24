@@ -5,7 +5,6 @@ from .models import User, IdCardInFormation
 
 
 class IdCardInFormationSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = IdCardInFormation
         fields = "__all__"
@@ -13,11 +12,15 @@ class IdCardInFormationSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         request = self.context.get('request')
 
-        if request.user.is_staff:
-            instance.id_card_status == validated_data.get('id_card_status', instance.id_card_status)
-
-        instance.id_card == validated_data.get('id_card', instance.id_card)
-        instance.id_card_number == validated_data.get('id_card_number', instance.id_card_number)
+        # If the user is staff, update id_card_status; otherwise, leave it unchanged.
+        if request and hasattr(request, 'user') and request.user.is_staff:
+            instance.id_card_status = validated_data.get('id_card_status', instance.id_card_status)
+            instance.id_card = validated_data.get('id_card', instance.id_card)
+            instance.id_card_number = validated_data.get('id_card_number', instance.id_card_number)
+        
+        # Update id_card and id_card_number for any user
+        instance.id_card = validated_data.get('id_card', instance.id_card)
+        instance.id_card_number = validated_data.get('id_card_number', instance.id_card_number)
 
         instance.save()
         return instance

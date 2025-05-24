@@ -19,25 +19,25 @@ class IdCardViewSet(viewsets.ViewSet):
         else:
             return Response({"Massage": "شما دسترسی به اطلاعات کارت ملی را ندارید"}, status=status.HTTP_403_FORBIDDEN)
 
-    def retreive(self, request, pk):
-        query = get_object_or_404(IdCardInFormation, id=pk)
-        if request.user.is_staff or query.id_card_info:
-            serializer = UserSerializer(query)
+    def retrieve(self, request, pk):
+        instance = get_object_or_404(IdCardInFormation, id=pk)
+        if request.user.is_staff or request.user == instance.id_card_info:
+            serializer = IdCardInFormationSerializer(instance)
             return Response(serializer.data)
         else:
             return Response({"Massage": "شما دسترسی برای دریافت اطلاعات را ندارید"}, status=status.HTTP_403_FORBIDDEN)
 
     def update(self, request, pk):
-        query = get_object_or_404(IdCardInFormation, id=pk)
-        if request.user.is_staff or query.id_card_info:
-            serializer = UserSerializer(query)
+        instance = get_object_or_404(IdCardInFormation, id=pk)
+        if request.user.is_staff or instance.id_card_info:
+            serializer = IdCardInFormationSerializer(instance, data=request.data, partial=True, context={'request': request})
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_200_OK)
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Response({"Massage": "شما دسترسی برای به‌روزرسانی اطلاعات را ندارید."}, status=status.HTTP_403_FORBIDDEN)
+            return Response({"Message": "شما دسترسی برای به‌روزرسانی اطلاعات را ندارید."}, status=status.HTTP_403_FORBIDDEN)
 
 
 
