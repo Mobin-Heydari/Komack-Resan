@@ -19,76 +19,71 @@ def get_full_host():
 
 
 class FirstItemSerializer(serializers.ModelSerializer):
-    icon = serializers.SerializerMethodField()
+    # This field is used for output
+    icon_url = serializers.SerializerMethodField()
+    # Use this field for write operations
+    icon = serializers.ImageField(write_only=True, required=False)
+    name = serializers.CharField(required=False)
+    slug = serializers.CharField(required=False)
 
     class Meta:
         model = FirstItem
-        fields = "__all__"
-
-    def get_icon(self, obj):
+        fields = ['name', 'icon_url', 'icon', 'slug']
+    
+    def get_icon_url(self, obj):
         if obj.icon:
             return f"{get_full_host()}{obj.icon.url}"
         return None
-    
 
     def create(self, validated_data):
-        # Generate a slug for the first_item based on its name.
-        generated_slug = slugify(validated_data.get('name'), allow_unicode=True)
-        validated_data['slug'] = generated_slug
-
-        # Create the first_item and its related validation status atomically.
+        # Create the first_item atomically.
         with transaction.atomic():
             first_item = FirstItem.objects.create(**validated_data)
-        
         return first_item
-    
 
     def update(self, instance, validated_data):
-        # Optionally, if the name is updated, regenerate the slug.
-        if 'name' in validated_data:
-            validated_data['slug'] = slugify(validated_data['name'], allow_unicode=True)
-
-        # Update instance fields.
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+        # Update the instance with new data if provided.
+        instance.name = validated_data.get('name', instance.name)
+        # Only update the icon if new data is provided.
+        if 'icon' in validated_data:
+            instance.icon = validated_data.get('icon')
+        instance.slug = validated_data.get('slug', instance.slug)
 
         instance.save()
         return instance
+
         
 
 class SecondItemSerializer(serializers.ModelSerializer):
-    icon = serializers.SerializerMethodField()
+    # This field is used for output
+    icon_url = serializers.SerializerMethodField()
+    # Use this field for write operations
+    icon = serializers.ImageField(write_only=True, required=False)
+    name = serializers.CharField(required=False)
+    slug = serializers.CharField(required=False)
 
     class Meta:
         model = SecondItem
-        fields = "__all__"
+        fields = ['name', 'icon_url', 'icon', 'slug']
     
-    def get_icon(self, obj):
+    def get_icon_url(self, obj):
         if obj.icon:
             return f"{get_full_host()}{obj.icon.url}"
         return None
-    
 
     def create(self, validated_data):
-        # Generate a slug for the second_item based on its name.
-        generated_slug = slugify(validated_data.get('name'), allow_unicode=True)
-        validated_data['slug'] = generated_slug
-
-        # Create the second_item and its related validation status atomically.
+        # Create the first_item atomically.
         with transaction.atomic():
-            second_item = SecondItem.objects.create(**validated_data)
-        
-        return second_item
-    
+            first_item = SecondItem.objects.create(**validated_data)
+        return first_item
 
     def update(self, instance, validated_data):
-        # Optionally, if the name is updated, regenerate the slug.
-        if 'name' in validated_data:
-            validated_data['slug'] = slugify(validated_data['name'], allow_unicode=True)
-
-        # Update instance fields.
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+        # Update the instance with new data if provided.
+        instance.name = validated_data.get('name', instance.name)
+        # Only update the icon if new data is provided.
+        if 'icon' in validated_data:
+            instance.icon = validated_data.get('icon')
+        instance.slug = validated_data.get('slug', instance.slug)
 
         instance.save()
         return instance
@@ -189,7 +184,7 @@ class WorkDaySerializer(serializers.ModelSerializer):
     # Returns True if the workday is currently active for the company.
     is_open_now = serializers.SerializerMethodField()
     # Accept the company slug (write-only) to identify the company during creation.
-    company_slug = serializers.CharField(write_only=True, required=True)
+    company_slug = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = WorkDay
@@ -470,16 +465,17 @@ class CompanyAddressSerializer(serializers.ModelSerializer):
 
     
 class CompanySerializer(serializers.ModelSerializer):
-    logo = serializers.SerializerMethodField()
-    banner = serializers.SerializerMethodField()
-    intro_video = serializers.SerializerMethodField()
+    logo = serializers.ImageField(required=False)
+    banner = serializers.ImageField(required=False)
+    intro_video = serializers.FileField(required=False)
     validation_status = CompanyValidationStatusSerializer(read_only=True)
     workdays = WorkDaySerializer(many=True, read_only=True)
     address = CompanyAddressSerializer(read_only=True)
     companies_first_item = CompanyFirstItemSerializer(many=True, read_only=True)
     companies_second_item = CompanySecondItemSerializer(many=True, read_only=True)
     # Use a write-only field for industry identification
-    industry_slug = serializers.CharField(write_only=True, help_text="The slug representing the industry.")
+    industry_slug = serializers.CharField(write_only=True, help_text="The slug representing the industry.", required=False)
+    name = serializers.CharField(required=False)
 
 
     class Meta:
@@ -546,9 +542,10 @@ class CompanySerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         request = self.context.get('request')
+        print("Validated Data:", validated_data)  # Debugging print
 
         # If industry_slug is provided, update the company’s industry.
-        industry_slug = validated_data.pop('industry_slug', None)
+        industry_slug = validated_data.get('industry_slug', None)
         if industry_slug:
             industry = Industry.objects.get(slug=industry_slug)
             validated_data['industry'] = industry
@@ -565,29 +562,34 @@ class CompanySerializer(serializers.ModelSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
+        
         return instance
 
 
 
 class CompanyEmployeeSerializer(serializers.ModelSerializer):
-    # Read-only fields for displaying company and employee names.
     company = serializers.SlugRelatedField(read_only=True, slug_field='name')
     employee = serializers.SlugRelatedField(read_only=True, slug_field='full_name')
-    # Write-only field for specifying the company via slug.
+    
+    # Write-only field for specifying the company and employee via slug/username.
     company_slug = serializers.CharField(write_only=True, required=True)
+    employee_username = serializers.CharField(write_only=True, required=True)
 
     class Meta:
         model = CompanyEmployee
-        fields = ['id', 'company', 'company_slug', 'employee', 'position', 'created_at', 'updated_at']
+        fields = ['id', 'company', 'company_slug', 'employee', 'employee_username', 'position', 'created_at', 'updated_at']
         read_only_fields = ('company', 'employee', 'created_at')
 
     def validate(self, attrs):
         """
-        On create, use company_slug to fetch the actual company instance.
-        On update, prevent changing the company.
+        Ensure company exists and user exists before creation.
+        Prevent updating the company field.
+        Enforce permission rules based on user type.
         """
-        if not self.instance:
-            # Remove company_slug and fetch the actual Company instance.
+        request = self.context.get('request')
+
+        if not self.instance:  # Creation logic
+            # Retrieve the company instance
             company_slug = attrs.pop('company_slug')
             try:
                 company = Company.objects.get(slug=company_slug)
@@ -595,39 +597,60 @@ class CompanyEmployeeSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                     "company_slug": "No company with this slug exists."
                 })
+            
+            # Retrieve the employee instance using username
+            employee_username = attrs.pop('employee_username')
+            try:
+                employee = User.objects.get(username=employee_username)
+            except User.DoesNotExist:
+                raise serializers.ValidationError({
+                    "employee_username": "No user with this username exists."
+                })
+
+            # Permission check: Prevent SP users from being added if the requester isn’t the company owner.
+            if employee.user_type == "SP" and request.user != company.employer:
+                raise serializers.ValidationError({
+                    "employee": "You do not have permission to assign this user to the company."
+                })
+
+            # Assign the validated company and employee instances
             attrs['company'] = company
-        else:
-            # On update, ensure company cannot be changed.
-            if 'company_slug' in attrs:
-                if attrs['company_slug'] != self.instance.company.slug:
-                    raise serializers.ValidationError({
-                        "company_slug": "Company cannot be changed on update."
-                    })
+            attrs['employee'] = employee
+
+        else:  # Update logic
+            # Ensure company cannot be changed
+            if 'company_slug' in attrs and attrs['company_slug'] != self.instance.company.slug:
+                raise serializers.ValidationError({
+                    "company_slug": "Company cannot be changed on update."
+                })
             attrs['company'] = self.instance.company
+
+            # Ensure employee cannot be changed
+            if 'employee_username' in attrs and attrs['employee_username'] != self.instance.employee.username:
+                raise serializers.ValidationError({
+                    "employee_username": "Employee cannot be changed on update."
+                })
+            attrs['employee'] = self.instance.employee
 
         return attrs
 
     def create(self, validated_data):
-        """
-        Create a new CompanyEmployee instance while ensuring company is set via slug.
-        """
-        # Remove company_slug as company instance has already been set.
-        validated_data.pop('company_slug', None)
+        """ Create a new CompanyEmployee instance ensuring proper validation. """
         with transaction.atomic():
-            instance = CompanyEmployee(**validated_data)
-            instance.save()
-        return instance
+            company_employee = CompanyEmployee.objects.create(**validated_data)
+        return company_employee
 
     def update(self, instance, validated_data):
-        """
-        Update an existing CompanyEmployee instance while ensuring company remains unchanged.
-        """
-        # Prevent updating company.
+        """ Ensure company & employee cannot be changed; update other fields. """
         validated_data.pop('company_slug', None)
+        validated_data.pop('employee_username', None)
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+
         instance.save()
         return instance
+
 
 
 
@@ -658,13 +681,16 @@ class CompanyCardSerializer(serializers.ModelSerializer):
         Validate that a valid company_slug is provided and attach
         the corresponding Company object to the validated data.
         """
-        company_slug = attrs.pop("company_slug")
-        try:
-            company = Company.objects.get(slug=company_slug)
-        except Company.DoesNotExist:
-            raise serializers.ValidationError({"company_slug": "Invalid company slug."})
-        attrs["company"] = company
+        company_slug = attrs.pop("company_slug", None)
+        if company_slug is not None:
+            try:
+                company = Company.objects.get(slug=company_slug)
+            except Company.DoesNotExist:
+                raise serializers.ValidationError({"company_slug": "Invalid company slug."})
+            attrs["company"] = company
+            return attrs
         return attrs
+        
 
     def create(self, validated_data):
         """

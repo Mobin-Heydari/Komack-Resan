@@ -388,13 +388,13 @@ class CompanyEmployee(models.Model):
 
 class WorkDay(models.Model):
     class DayOfWeek(models.TextChoices):
-        MONDAY = 'monday', 'دوشنبه'
-        TUESDAY = 'tuesday', 'سه‌شنبه'
-        WEDNESDAY = 'wednesday', 'چهارشنبه'
-        THURSDAY = 'thursday', 'پنج‌شنبه'
-        FRIDAY = 'friday', 'جمعه'
-        SATURDAY = 'saturday', 'شنبه'
-        SUNDAY = 'sunday', 'یکشنبه'
+        MONDAY = 'MO', 'دوشنبه'
+        TUESDAY = 'TU', 'سه‌شنبه'
+        WEDNESDAY = 'WE', 'چهارشنبه'
+        THURSDAY = 'TH', 'پنج‌شنبه'
+        FRIDAY = 'FR', 'جمعه'
+        SATURDAY = 'SA', 'شنبه'
+        SUNDAY = 'SU', 'یکشنبه'
 
     company = models.ForeignKey(
         Company,

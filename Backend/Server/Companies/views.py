@@ -44,7 +44,7 @@ class CompanyViewSet(viewsets.ViewSet):
     - Retrieve: Returns the company by its slug. Non-validated companies are accessible only to staff.
     - Create, Update, Destroy: Restricted to admin users or users with user_type 'OW'.
     """
-    permission_classes = [IsAdminOrOwner]
+    # permission_classes = [IsAdminOrOwner]
     lookup_field = 'slug'
 
     def list(self, request):
@@ -96,7 +96,7 @@ class CompanyViewSet(viewsets.ViewSet):
         """
         company = get_object_or_404(Company, slug=slug)
         self.check_object_permissions(request, company)
-        serializer = CompanySerializer(company, data=request.data, context={'request': request})
+        serializer = CompanySerializer(company, partial=True, data=request.data, context={'request': request})
         if serializer.is_valid():
             company = serializer.save()
             response_serializer = CompanySerializer(company, context={'request': request})
@@ -131,6 +131,7 @@ class FirstItemViewSet(viewsets.ViewSet):
     - Create, Update, Delete: Restricted to admin users.
     """
     permission_classes = [IsAdminOrReadOnly]
+    lookup_field = "slug"
 
     def list(self, request):
         queryset = FirstItem.objects.all()
@@ -191,6 +192,7 @@ class SecondItemViewSet(viewsets.ViewSet):
     - Create, Update, Delete: Restricted to admin users.
     """
     permission_classes = [IsAdminOrReadOnly]
+    lookup_field = "slug"
 
     def list(self, request):
         queryset = SecondItem.objects.all()
@@ -296,9 +298,9 @@ class CompanyFirstItemViewSet(viewsets.ViewSet):
     Endpoints:
       - List:      GET /company-first-items/
       - Create:    POST /company-first-items/create/
-      - Retrieve:  GET /company-first-items/<slug:slug>/
-      - Update:    PUT/PATCH /company-first-items/<slug:slug>/update/
-      - Delete:    DELETE /company-first-items/<slug:slug>/delete/
+      - Retrieve:  GET /company-first-items/<int:pk>/
+      - Update:    PUT/PATCH /company-first-items/<int:pk>/update/
+      - Delete:    DELETE /company-first-items/<int:pk>/delete/
     
     Access for write actions (create, update, delete) is restricted to admins or the company’s employer.
     """
@@ -309,8 +311,8 @@ class CompanyFirstItemViewSet(viewsets.ViewSet):
         serializer = CompanyFirstItemSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
-    def retrieve(self, request, slug):
-        instance = get_object_or_404(CompanyFirstItem, slug=slug)
+    def retrieve(self, request, pk):
+        instance = get_object_or_404(CompanyFirstItem, id=pk)
         self.check_object_permissions(request, instance)
         serializer = CompanyFirstItemSerializer(instance, context={'request': request})
         return Response(serializer.data)
@@ -329,8 +331,8 @@ class CompanyFirstItemViewSet(viewsets.ViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def update(self, request, slug):
-        instance = get_object_or_404(CompanyFirstItem, slug=slug)
+    def update(self, request, pk):
+        instance = get_object_or_404(CompanyFirstItem, id=pk)
         self.check_object_permissions(request, instance)
         serializer = CompanyFirstItemSerializer(instance, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
@@ -345,8 +347,8 @@ class CompanyFirstItemViewSet(viewsets.ViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, slug):
-        instance = get_object_or_404(CompanyFirstItem, slug=slug)
+    def destroy(self, request, pk):
+        instance = get_object_or_404(CompanyFirstItem, id=pk)
         self.check_object_permissions(request, instance)
         instance.delete()
         return Response(
@@ -363,9 +365,9 @@ class CompanySecondItemViewSet(viewsets.ViewSet):
     Endpoints:
       - List:      GET /company-second-items/
       - Create:    POST /company-second-items/create/
-      - Retrieve:  GET /company-second-items/<slug:slug>/
-      - Update:    PUT/PATCH /company-second-items/<slug:slug>/update/
-      - Delete:    DELETE /company-second-items/<slug:slug>/delete/
+      - Retrieve:  GET /company-second-items/<int:pk>/
+      - Update:    PUT/PATCH /company-second-items/<int:pk>/update/
+      - Delete:    DELETE /company-second-items/<int:pk>/delete/
     
     Access for create, update, and delete is restricted to admins or the company’s employer.
     """
@@ -376,8 +378,8 @@ class CompanySecondItemViewSet(viewsets.ViewSet):
         serializer = CompanySecondItemSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
-    def retrieve(self, request, slug):
-        instance = get_object_or_404(CompanySecondItem, slug=slug)
+    def retrieve(self, request, pk):
+        instance = get_object_or_404(CompanySecondItem, id=pk)
         self.check_object_permissions(request, instance)
         serializer = CompanySecondItemSerializer(instance, context={'request': request})
         return Response(serializer.data)
@@ -396,8 +398,8 @@ class CompanySecondItemViewSet(viewsets.ViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def update(self, request, slug):
-        instance = get_object_or_404(CompanySecondItem, slug=slug)
+    def update(self, request, pk):
+        instance = get_object_or_404(CompanySecondItem, id=pk)
         self.check_object_permissions(request, instance)
         serializer = CompanySecondItemSerializer(instance, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
@@ -412,8 +414,8 @@ class CompanySecondItemViewSet(viewsets.ViewSet):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def destroy(self, request, slug):
-        instance = get_object_or_404(CompanySecondItem, slug=slug)
+    def destroy(self, request, pk):
+        instance = get_object_or_404(CompanySecondItem, id=pk)
         self.check_object_permissions(request, instance)
         instance.delete()
         return Response(
