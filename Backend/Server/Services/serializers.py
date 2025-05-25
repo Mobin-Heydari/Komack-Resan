@@ -14,7 +14,7 @@ class ServiceSerializer(serializers.ModelSerializer):
     # Read-only fields for display.
     company = serializers.SlugRelatedField(read_only=True, slug_field='name')
     service_provider = serializers.SlugRelatedField(read_only=True, slug_field='full_name')
-    recepient = serializers.SlugRelatedField(read_only=True, slug_field='full_name')
+    recipient = serializers.SlugRelatedField(read_only=True, slug_field='full_name')
     company_card = CompanyCardSerializer(read_only=True)
     
     # Computed human‐readable display fields.
@@ -45,7 +45,7 @@ class ServiceSerializer(serializers.ModelSerializer):
             "company",
             "company_slug",
             "service_provider",
-            "recepient",
+            "recipient",
             "recipient_address",
             "recipient_address_id",
             "company_card_id",
@@ -70,7 +70,7 @@ class ServiceSerializer(serializers.ModelSerializer):
         read_only_fields = [
             "company", 
             "service_provider", 
-            "recepient", 
+            "recipient", 
             "recipient_address", 
             "is_invoiced", 
             "created_at", 
@@ -92,14 +92,14 @@ class ServiceSerializer(serializers.ModelSerializer):
         On creation:
           • Use company_slug to fetch the Company and validate its status.
           • Ensure title and descriptions are provided.
-          • Set recepient to the current user.
+          • Set recipient to the current user.
           • Lookup recipient address via recipient_address_id.
           • Generate a random slug using UUID4.
           • Disallow setting payment_status during creation.
         On update:
           • Disallow changes to company (via company_slug).
           • Only allow updating payment_status if request.user is the service_provider.
-          • Only allow updating service_status if request.user is the recepient.
+          • Only allow updating service_status if request.user is the recipient.
           • Allow updating recipient_address.
         Additionally:
           • Only a service recipient (user_type "SC") may choose the payment method.
@@ -136,8 +136,8 @@ class ServiceSerializer(serializers.ModelSerializer):
             # Set service_provider to the company's employer.
             attrs["service_provider"] = company.employer
 
-            # Set recepient to current user.
-            attrs["recepient"] = user
+            # Set recipient to current user.
+            attrs["recipient"] = user
 
             # Validate and assign recipient address.
             recipient_address_id = attrs.pop("recipient_address_id", None)
@@ -164,9 +164,9 @@ class ServiceSerializer(serializers.ModelSerializer):
             if "payment_status" in attrs:
                 if user != self.instance.service_provider:
                     raise serializers.ValidationError({"payment_status": "Not authorized to update payment status."})
-            # Only allow updating service_status if request.user is the recepient.
+            # Only allow updating service_status if request.user is the recipient.
             if "service_status" in attrs:
-                if user != self.instance.recepient:
+                if user != self.instance.recipient:
                     raise serializers.ValidationError({"service_status": "Only the recipient can update service status."})
             # Process recipient_address update if provided.
             if "recipient_address_id" in attrs:
@@ -198,7 +198,7 @@ class ServiceSerializer(serializers.ModelSerializer):
 
             # --- Validation for payment method ---
             if "payment_method" in attrs:
-                if getattr(user, 'user_type', None) != "SC":
+                if getattr(user, 'user_type', None) != "SC" or "AD":
                     raise serializers.ValidationError({
                         "payment_method": "Only the service recipient may choose the payment method."
                     })

@@ -19,7 +19,7 @@ class IsServiceActionAllowed(BasePermission):
         
         # For creation, only allow if the user's type is "SC".
         if request.method == "POST":
-            return getattr(request.user, 'user_type', None) == "SC"
+            return getattr(request.user, 'user_type', None) == "SC" or "AD"
         
         # For other actions, we defer to object-level permission checks.
         return True

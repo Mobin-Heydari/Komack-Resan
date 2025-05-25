@@ -24,13 +24,13 @@ class ServiceRouter(routers.DefaultRouter):
                 # List route: GET /services/
                 path('', ServiceViewSet.as_view({'get': 'list'}), name='service-list'),
                 # Create route: POST /services/create/
-                path('create/', ServiceViewSet.as_view({'post': 'create'}), name='service-create'),
+                path('', ServiceViewSet.as_view({'post': 'create'}), name='service-create'),
                 # Detail routes using slug.
                 path('<slug:slug>/', include([
                     # Retrieve route: GET /services/<slug>/
                     path('', ServiceViewSet.as_view({'get': 'retrieve'}), name='service-detail'),
                     # Update route: PUT/PATCH /services/<slug>/update/
-                    path('update/', ServiceViewSet.as_view({'put': 'update', 'patch': 'update'}), name='service-update'),
+                    path('', ServiceViewSet.as_view({'put': 'update', 'patch': 'update'}), name='service-update'),
                 ])),
             ])),
         ]
@@ -62,15 +62,15 @@ class ServiceEmployeeRouter(routers.DefaultRouter):
                 # List: GET /service-employees/
                 path('', ServiceEmployeeViewSet.as_view({'get': 'list'}), name='service-employee-list'),
                 # Create: POST /service-employees/create/
-                path('create/', ServiceEmployeeViewSet.as_view({'post': 'create'}), name='service-employee-create'),
+                path('', ServiceEmployeeViewSet.as_view({'post': 'create'}), name='service-employee-create'),
                 # Detail routes grouped under the primary key.
                 path('<int:pk>/', include([
                     # Retrieve: GET /service-employees/<int:pk>/
                     path('', ServiceEmployeeViewSet.as_view({'get': 'retrieve'}), name='service-employee-detail'),
                     # Update: PUT/PATCH /service-employees/<int:pk>/update/
-                    path('update/', ServiceEmployeeViewSet.as_view({'put': 'update', 'patch': 'update'}), name='service-employee-update'),
+                    path('', ServiceEmployeeViewSet.as_view({'put': 'update', 'patch': 'update'}), name='service-employee-update'),
                     # Delete: DELETE /service-employees/<int:pk>/delete/
-                    path('delete/', ServiceEmployeeViewSet.as_view({'delete': 'destroy'}), name='service-employee-delete'),
+                    path('', ServiceEmployeeViewSet.as_view({'delete': 'destroy'}), name='service-employee-delete'),
                 ])),
             ])),
         ]
