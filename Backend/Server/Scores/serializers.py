@@ -5,6 +5,7 @@ from Services.models import Service
 
 
 
+
 class ServiceScoreSerializer(serializers.ModelSerializer):
     # Computed field: returns the overall score rounded to 2 decimals.
     overall = serializers.SerializerMethodField(read_only=True)
@@ -26,13 +27,7 @@ class ServiceScoreSerializer(serializers.ModelSerializer):
             'created_at',
         ]
         read_only_fields = ['service', 'overall', 'created_at']
-        validators = [
-            UniqueTogetherValidator(
-                queryset=ServiceScore.objects.all(),
-                fields=['service'],
-                message="A score for this service already exists."
-            )
-        ]
+        # Removed UniqueTogetherValidator to avoid the required validation on the read-only "service" field.
     
     def get_overall(self, obj):
         overall = obj.overall  # Uses the model’s property: (quality + behavior + time) / 3
@@ -56,9 +51,13 @@ class ServiceScoreSerializer(serializers.ModelSerializer):
             except Service.DoesNotExist:
                 raise serializers.ValidationError({'service_slug': 'Service with this slug does not exist.'})
             
+            # Manually ensure the Service does not already have an associated score.
+            if ServiceScore.objects.filter(service=service).exists():
+                raise serializers.ValidationError({'service_slug': 'A score for this service already exists.'})
+            
             attrs['service'] = service
         else:
-            # Update operation: Do not allow changing the associated service.
+            # Update operation: Do not allow changing the service via service_slug.
             if 'service_slug' in attrs:
                 raise serializers.ValidationError({'service_slug': 'You cannot change the service on update.'})
         return attrs

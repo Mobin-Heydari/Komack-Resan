@@ -11,5 +11,5 @@ service_score_router = ServiceScoreRouter()
 
 
 urlpatterns = [
-    path('services/', include(service_score_router.get_urls())),
+    path('', include(service_score_router.get_urls())),
 ]

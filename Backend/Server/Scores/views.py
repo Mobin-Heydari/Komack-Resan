@@ -67,7 +67,7 @@ class ServiceScoreViewSet(viewsets.ViewSet):
         instance = get_object_or_404(ServiceScore, pk=pk)
         self.check_object_permissions(request, instance)
         # Additional check for destroy: only Admin or Service recipient can delete the score.
-        if not (getattr(request.user, 'user_type', None) == "AD" or instance.service.recepient == request.user):
+        if not (getattr(request.user, 'user_type', None) == "AD" or instance.service.recipient == request.user):
             return Response(
                 {"detail": "You do not have permission to delete this score."},
                 status=status.HTTP_403_FORBIDDEN

@@ -16,4 +16,5 @@ urlpatterns = [
     path('payments/', include('Payments.urls', namespace='Payments')),
     path('addresses/', include('Addresses.urls', namespace='Addresses')),
     path('accounts/', include('Accounts.urls', namespace='Accounts')),
+    path('scores/', include('Scores.urls', namespace='Scores')),
 ]   + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
