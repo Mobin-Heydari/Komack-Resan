@@ -78,13 +78,9 @@ class IndustryViewSet(viewsets.ViewSet):
         serializer = IndustrySerializer(industry)
         return Response(serializer.data)
 
-    def create(self, request, category_slug, *args, **kwargs):
+    def create(self, request, *args, **kwargs):
         if request.user.is_staff:
-            category = get_object_or_404(IndustryCategory, slug=category_slug)
-            serializer = IndustrySerializer(
-                data=request.data,
-                context={'request': request, 'category_slug': category.slug}
-            )
+            serializer = IndustrySerializer(data=request.data, context={'request': request})
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -95,14 +91,12 @@ class IndustryViewSet(viewsets.ViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-    def update(self, request, slug, category_slug=None, *args, **kwargs):
+    def update(self, request, slug, *args, **kwargs):
         if request.user.is_staff:
             industry = get_object_or_404(Industry, slug=slug)
             
             category = industry.category
             
-            if category_slug:
-                category = get_object_or_404(IndustryCategory, slug=category_slug)
 
             serializer = IndustrySerializer(
                 industry, 
@@ -125,7 +119,7 @@ class IndustryViewSet(viewsets.ViewSet):
         if request.user.is_staff:
             industry = get_object_or_404(Industry, slug=slug)
             industry.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response({"massage": "The industry deleted"}, status=status.HTTP_204_NO_CONTENT)
         else:
             return Response(
                 {"error": "شما اجازه حذف این محتوا را ندارید."},

@@ -9,6 +9,7 @@ from .models import IndustryCategory, Industry
 
 
 class IndustryCategorySerializer(serializers.ModelSerializer):
+
     class Meta:
         model = IndustryCategory
         fields = '__all__'
@@ -18,10 +19,8 @@ class IndustryCategorySerializer(serializers.ModelSerializer):
         return super().update(instance, validated_data)
     
     def create(self, validated_data):
-        slug = slugify(value=validated_data['name'], allow_unicode=True)
-
         category = IndustryCategory.objects.create(
-            slug=slug,
+            slug=validated_data['slug'],
             name=validated_data['name'],
             icon=validated_data['icon']
         )
@@ -33,6 +32,8 @@ class IndustryCategorySerializer(serializers.ModelSerializer):
 
 class IndustrySerializer(serializers.ModelSerializer):
     category = IndustryCategorySerializer(read_only=True)
+    category_slug = serializers.CharField(write_only=True, required=False)
+    name = serializers.CharField(required=False)
 
     class Meta:
         model = Industry
@@ -46,7 +47,7 @@ class IndustrySerializer(serializers.ModelSerializer):
 
 
     def update(self, instance, validated_data):
-        category_slug = self.context.get('category_slug')
+        category_slug = validated_data.pop('category_slug', None)
         if category_slug:
             category = IndustryCategory.objects.get(slug=category_slug)
             validated_data['category'] = category
@@ -56,17 +57,15 @@ class IndustrySerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
 
-        category_slug = self.context.get('category_slug')
+        category_slug = validated_data.pop('category_slug', None)
 
         if not category_slug:
             raise ValidationError('category is required')
         
         category = IndustryCategory.objects.get(slug=category_slug)
-        
-        slug = slugify(value=validated_data['name'], allow_unicode=True)
 
         industry = Industry.objects.create(
-            slug=slug,
+            slug=validated_data['slug'],
             category=category,
             name=validated_data['name'],
             icon=validated_data['icon'],
