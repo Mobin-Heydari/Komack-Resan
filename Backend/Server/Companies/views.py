@@ -6,7 +6,6 @@ from .models import(
     Company,
     WorkDay,
     CompanyCard,
-    CompanyEmployee,
     CompanyFirstItem,
     CompanySecondItem,
     CompanyValidationStatus,
@@ -15,7 +14,6 @@ from .serializers import(
     CompanySerializer,
     WorkDaySerializer,
     CompanyCardSerializer,
-    CompanyEmployeeSerializer,
     CompanyFirstItemSerializer,
     CompanySecondItemSerializer,
     CompanyValidationStatusSerializer,
@@ -362,69 +360,6 @@ class WorkDayViewSet(viewsets.ViewSet):
             {'message': 'Workday deleted successfully.'},
             status=status.HTTP_204_NO_CONTENT
         )
-
-
-
-class CompanyEmployeeViewSet(viewsets.ViewSet):
-    """
-    A ViewSet for managing CompanyEmployee resources.
-
-    Endpoints:
-      - List:      GET /company-employees/
-      - Create:    POST /company-employees/create/
-      - Retrieve:  GET /company-employees/<pk>/
-      - Update:    PUT/PATCH /company-employees/<pk>/update/
-      - Delete:    DELETE /company-employees/<pk>/delete/
-
-    Notes:
-      • The company is set on create via a write-only field 'company_slug', via which the actual
-        Company instance is fetched.
-      • On update the company cannot be changed.
-      • Permission is enforced via IsAdminOrCompanyEmployer.
-    """
-    permission_classes = [IsAdminOrCompanyEmployer]
-
-    def list(self, request):
-        queryset = CompanyEmployee.objects.all()
-        serializer = CompanyEmployeeSerializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data)
-
-    def retrieve(self, request, pk=None):
-        instance = get_object_or_404(CompanyEmployee, pk=pk)
-        self.check_object_permissions(request, instance)
-        serializer = CompanyEmployeeSerializer(instance, context={'request': request})
-        return Response(serializer.data)
-
-    def create(self, request):
-        serializer = CompanyEmployeeSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            instance = serializer.save()
-            response_serializer = CompanyEmployeeSerializer(instance, context={'request': request})
-            return Response({
-                'message': 'Company employee created successfully.',
-                'data': response_serializer.data
-            }, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def update(self, request, pk=None):
-        instance = get_object_or_404(CompanyEmployee, pk=pk)
-        self.check_object_permissions(request, instance)
-        serializer = CompanyEmployeeSerializer(instance, data=request.data, partial=True, context={'request': request})
-        if serializer.is_valid():
-            instance = serializer.save()
-            response_serializer = CompanyEmployeeSerializer(instance, context={'request': request})
-            return Response({
-                'message': 'Company employee updated successfully.',
-                'data': response_serializer.data
-            }, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def destroy(self, request, pk=None):
-        instance = get_object_or_404(CompanyEmployee, pk=pk)
-        self.check_object_permissions(request, instance)
-        instance.delete()
-        return Response({'message': 'Company employee deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
-
 
 
 

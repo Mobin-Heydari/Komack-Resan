@@ -3,7 +3,6 @@ from .routers import (
     CompanyRouter,
     WorkDayRouter,
     CompanyCardRouter,
-    CompanyEmployeeRouter,
     CompanyFirstItemRouter,
     CompanySecondItemRouter,
     CompanyValidationStatusRouter,
@@ -19,7 +18,6 @@ company_validation_router = CompanyValidationStatusRouter()
 company_first_item_router = CompanyFirstItemRouter()
 company_second_item_router = CompanySecondItemRouter()
 workday_router = WorkDayRouter()
-company_employee_router = CompanyEmployeeRouter()
 company_card_router = CompanyCardRouter()
 
 
@@ -29,6 +27,5 @@ urlpatterns = [
     path('company-firts-item/', include(company_first_item_router.get_urls())),
     path('company-second-item/', include(company_second_item_router.get_urls())),
     path('work-day/', include(workday_router.get_urls())),
-    path('employees/', include(company_employee_router.get_urls())),
     path('cards/', include(company_card_router.get_urls())),
 ]

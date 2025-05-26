@@ -6,7 +6,6 @@ from .models import (
     SecondItem,
     Company,
     CompanyValidationStatus,
-    CompanyEmployee,
     WorkDay,
     CompanyFirstItem,
     CompanySecondItem,
@@ -37,13 +36,6 @@ class CompanySecondItemInline(admin.TabularInline):
     extra = 0
     verbose_name = "آیتم دوم"
     verbose_name_plural = "آیتم‌های دوم شرکت"
-
-
-class CompanyEmployeeInline(admin.TabularInline):
-    model = CompanyEmployee
-    extra = 0
-    verbose_name = "کارمند"
-    verbose_name_plural = "کارمندها"
 
 
 class CompanyValidationStatusInline(admin.StackedInline):
@@ -137,7 +129,6 @@ class CompanyAdmin(admin.ModelAdmin):
         WorkDayInline,
         CompanyFirstItemInline,
         CompanySecondItemInline,
-        CompanyEmployeeInline,
         CompanyValidationStatusInline,
         CompanyCardInline,
     ]
@@ -180,13 +171,6 @@ class CompanyValidationStatusAdmin(admin.ModelAdmin):
         return "تایید شده" if obj.business_license_status else "تایید نشده"
     business_license_status_display.short_description = "وضعیت جواز کسب"
 
-
-@admin.register(CompanyEmployee)
-class CompanyEmployeeAdmin(admin.ModelAdmin):
-    list_display = ('company', 'employee', 'position', 'created_at')
-    search_fields = ('employee__username', 'company__name')
-    list_filter = ('position', 'company')
-    readonly_fields = ('created_at', 'updated_at',)
 
 
 @admin.register(WorkDay)

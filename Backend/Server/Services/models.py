@@ -1,5 +1,5 @@
 from django.db import models
-from Companies.models import Company, CompanyEmployee, CompanyCard
+from Companies.models import Company, CompanyCard
 from Users.models import User
 from Addresses.models import RecipientAddress
 
@@ -129,33 +129,3 @@ class Service(models.Model):
             score = self.score
             return (score.quality + score.behavior + score.time) / 3
         return None
-
-
-
-class ServiceEmployee(models.Model):
-
-    job_title = models.CharField(max_length=255, verbose_name="سمت کاری")
-
-    recipient_service = models.ForeignKey(
-        Service,
-        on_delete=models.CASCADE,
-        related_name="service_workers",
-        verbose_name="سرویس درخواست شده"
-    )
-
-    employee = models.ForeignKey(
-        CompanyEmployee,
-        on_delete=models.CASCADE,
-        related_name="service_company_worker",
-        verbose_name="کارمند شرکت"
-    )
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
-
-    class Meta:
-        verbose_name = "کارمند سرویس"
-        verbose_name_plural = "کارمندان سرویس‌ها"
-
-    def __str__(self):
-        return self.job_title

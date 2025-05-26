@@ -1,15 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Service, ServiceEmployee
-
-
-
-# Inline admin for ServiceEmployee records
-class ServiceEmployeeInline(admin.TabularInline):
-    model = ServiceEmployee
-    extra = 0
-    verbose_name = "کارمند سرویس"
-    verbose_name_plural = "کارمندان سرویس‌ها"
+from .models import Service
 
 
 
@@ -75,8 +66,6 @@ class ServiceAdmin(admin.ModelAdmin):
         }),
     )
     
-    inlines = [ServiceEmployeeInline]
-    
     def overall_score_display(self, obj):
         if obj.overall_score is not None:
             return f"{obj.overall_score:.2f}"
@@ -88,16 +77,3 @@ class ServiceAdmin(admin.ModelAdmin):
             return format_html('<img src="{}" width="100" height="100" />', obj.transaction_screenshot.url)
         return "فاقد تصویر"
     transaction_screenshot_preview.short_description = "پیش نمایش فاکتور تراکنش"
-
-
-
-@admin.register(ServiceEmployee)
-class ServiceEmployeeAdmin(admin.ModelAdmin):
-    list_display = ('recipient_service', 'employee', 'job_title', 'created_at')
-    search_fields = (
-        'recipient_service__title', 
-        'employee__employee__username',  # Traverses: ServiceEmployee.employee → CompanyEmployee.employee → User.username
-        'job_title'
-    )
-    list_filter = ('job_title',)
-    readonly_fields = ('created_at', 'updated_at')

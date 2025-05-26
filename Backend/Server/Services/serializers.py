@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
-from .models import Service, ServiceEmployee
-from Companies.models import Company, CompanyEmployee, CompanyCard
+from .models import Service
+from Companies.models import Company, CompanyCard
 from Companies.serializers import CompanyCardSerializer
 from Addresses.models import RecipientAddress
 
@@ -213,123 +213,6 @@ class ServiceSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         # Update allowed fields.
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
-        return instance
-
-
-
-
-class ServiceEmployeeSerializer(serializers.ModelSerializer):
-    # Read-only fields for display.
-    recipient_service = serializers.SlugRelatedField(read_only=True, slug_field='title')
-    employee = serializers.SlugRelatedField(read_only=True, slug_field='employee__full_name')
-    # Return the company name from the associated service.
-    service_company = serializers.SerializerMethodField(read_only=True)
-    
-    # Write-only fields for assigning related objects.
-    recipient_service_slug = serializers.CharField(write_only=True, required=True)
-    employee_id = serializers.IntegerField(write_only=True, required=True)
-    
-    class Meta:
-        model = ServiceEmployee
-        fields = [
-            "id",
-            "job_title",
-            "recipient_service",
-            "recipient_service_slug",
-            "employee",
-            "employee_id",
-            "service_company",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = [
-            "recipient_service", 
-            "employee", 
-            "created_at", 
-            "updated_at", 
-            "service_company",
-        ]
-    
-    def get_service_company(self, obj):
-        # Return the company name from the associated service.
-        if obj.recipient_service and obj.recipient_service.company:
-            return obj.recipient_service.company.name
-        return None
-    
-    def validate(self, attrs):
-        """
-        Enforces that:
-          - On creation:
-              * The service (looked up via 'recipient_service_slug') must exist.
-              * The service must have its service_status either PENDING ('PE') or IN_PROGRESS ('IP').
-              * The requesting user (from context) must equal service.service_provider.
-              * The employee lookup (via employee_id) must succeed.
-          - On update:
-              * The fields 'recipient_service_slug' and 'employee_id' cannot be changed.
-              * Additionally, the underlying service must remain in a PENDING or IN_PROGRESS state.
-              * Also only the service provider can update.
-        """
-        request = self.context.get("request")
-        user = request.user
-        
-        if not self.instance:  # Creation flow.
-            # Look up the service via recipient_service_slug.
-            service_slug = attrs.pop("recipient_service_slug")
-            try:
-                service = Service.objects.get(slug=service_slug)
-            except Service.DoesNotExist:
-                raise serializers.ValidationError({
-                    "recipient_service_slug": "Service not found."
-                })
-            # Validate service status.
-            if service.service_status not in [Service.ServiceStatusChoices.PENDING, Service.ServiceStatusChoices.IN_PROGRESS]:
-                raise serializers.ValidationError({
-                    "recipient_service_slug": "Employees can only be added to services in a PENDING or IN_PROGRESS state."
-                })
-            # Check that the requester is the service's provider.
-            if user != service.service_provider:
-                raise serializers.ValidationError({
-                    "recipient_service_slug": "Only the service provider can add service employees."
-                })
-            attrs["recipient_service"] = service
-            
-            # Process employee lookup.
-            employee_id = attrs.pop("employee_id")
-            try:
-                employee = CompanyEmployee.objects.get(id=employee_id)
-            except CompanyEmployee.DoesNotExist:
-                raise serializers.ValidationError({
-                    "employee_id": "Employee not found."
-                })
-            attrs["employee"] = employee
-
-        else:  # Update flow.
-            if "recipient_service_slug" in attrs:
-                raise serializers.ValidationError({
-                    "recipient_service_slug": "Cannot change the service for a service employee."
-                })
-            if "employee_id" in attrs:
-                raise serializers.ValidationError({
-                    "employee_id": "Cannot change the employee for a service employee."
-                })
-            # Additionally, check that the service status is still valid.
-            service = self.instance.recipient_service
-            if service.service_status not in [Service.ServiceStatusChoices.PENDING, Service.ServiceStatusChoices.IN_PROGRESS]:
-                raise serializers.ValidationError("Employees can only be managed for services in a PENDING or IN_PROGRESS state.")
-            # And ensure only the service provider is allowed to perform updates.
-            if user != service.service_provider:
-                raise serializers.ValidationError("Only the service provider can manage service employees.")
-        
-        return attrs
-
-    def create(self, validated_data):
-        return ServiceEmployee.objects.create(**validated_data)
-    
-    def update(self, instance, validated_data):
-        # For updates, the only fields that can be updated are those other than the service and employee; typically job_title.
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
