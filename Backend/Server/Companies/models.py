@@ -303,6 +303,89 @@ class CompanyValidationStatus(models.Model):
 
 
 
+class CompanyReceptionist(models.Model):
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="receptionists",
+        verbose_name="شرکت"
+    )
+    employee = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="receptionist_company",
+        verbose_name="کارمند"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ بروزرسانی")
+
+    class Meta:
+        verbose_name = "منشی"
+        verbose_name_plural = "منشی‌ها"
+    
+    def __str__(self):
+        return self.employee.username
+
+
+class CompanyAccountant(models.Model):
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="accountants",
+        verbose_name="شرکت"
+    )
+    employee = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="accountant_company",
+        verbose_name="کارمند"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ بروزرسانی")
+
+    class Meta:
+        verbose_name = "حسابدار"
+        verbose_name_plural = "حسابداران"
+    
+    def __str__(self):
+        return self.employee.username
+
+
+class CompanyExpert(models.Model):
+    class ExpertServiceType(models.TextChoices):
+        IN_HOUSE = 'IH', 'In House Service'
+        COMPANY = 'CP', 'Company Service'
+        BOTH = 'BO', 'Both'
+
+    company = models.ForeignKey(
+        Company,
+        on_delete=models.CASCADE,
+        related_name="experts",
+        verbose_name="شرکت"
+    )
+    employee = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="expert_company",
+        verbose_name="کارمند"
+    )
+    service_type = models.CharField(
+        max_length=2,
+        choices=ExpertServiceType.choices,
+        default=ExpertServiceType.COMPANY,
+        verbose_name="نوع سرویس"
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ بروزرسانی")
+
+    class Meta:
+        verbose_name = "متخصص"
+        verbose_name_plural = "متخصصان"
+    
+    def __str__(self):
+        return f"{self.employee.username} ({self.get_service_type_display()})"
+
+
 class WorkDay(models.Model):
     class DayOfWeek(models.TextChoices):
         MONDAY = 'MO', 'دوشنبه'
