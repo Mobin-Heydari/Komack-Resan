@@ -51,6 +51,24 @@ class Company(models.Model):
         verbose_name="توضیحات"
     )
 
+    city = models.ForeignKey(
+        City,
+        on_delete=models.SET_NULL,
+        related_name="city_companies",
+        verbose_name="شهر",
+        blank=True, null=True
+    )
+
+    province = models.ForeignKey(
+        Province,
+        on_delete=models.SET_NULL,
+        related_name="province_companies",
+        verbose_name="استان",
+        blank=True, null=True
+    )
+
+    address = models.TextField(verbose_name="آدرس", null=True, blank=True)
+
     website = models.URLField(
         blank=True,
         null=True,
