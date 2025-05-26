@@ -532,3 +532,183 @@ class CompanyCardSerializer(serializers.ModelSerializer):
         instance.card_holder_name = validated_data.get("card_holder_name", instance.card_holder_name)
         instance.save()
         return instance
+
+
+
+
+class CompanyReceptionistSerializer(serializers.ModelSerializer):
+    company_slug = serializers.CharField(write_only=True, required=True)
+    employee_username = serializers.CharField(write_only=True, required=True)
+    
+    class Meta:
+        model = CompanyReceptionist
+        fields = [
+            "id",
+            "company",         # read-only, set via company_slug
+            "employee",        # read-only, set via employee_username
+            "created_at",
+            "updated_at",
+            "company_slug",    # write-only field for company slug
+            "employee_username",  # write-only field for employee username
+        ]
+        read_only_fields = ["id", "company", "employee", "created_at", "updated_at"]
+
+    def validate(self, data):
+        request = self.context.get("request")
+        if not request:
+            raise serializers.ValidationError("Request is required in serializer context.")
+        user = request.user
+
+        company_slug = data.get("company_slug")
+        employee_username = data.get("employee_username")
+        
+        # Validate that the company exists.
+        try:
+            company = Company.objects.get(slug=company_slug)
+        except Company.DoesNotExist:
+            raise serializers.ValidationError({"company_slug": "Invalid company slug."})
+        
+        # Validate that the employee exists using username.
+        try:
+            employee = User.objects.get(username=employee_username)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"employee_username": "Employee not found."})
+        
+        # Only allow creation or update if the current user is admin or the company's employer.
+        if not (user.is_staff or company.employer == user):
+            raise serializers.ValidationError("Not authorized to add or update an employee for this company.")
+        
+        # Attach the objects.
+        data["company"] = company
+        data["employee"] = employee
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop("company_slug", None)
+        validated_data.pop("employee_username", None)
+        return CompanyReceptionist.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("company_slug", None)
+        validated_data.pop("employee_username", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+
+
+class CompanyAccountantSerializer(serializers.ModelSerializer):
+    company_slug = serializers.CharField(write_only=True, required=True)
+    employee_username = serializers.CharField(write_only=True, required=True)
+    
+    class Meta:
+        model = CompanyAccountant
+        fields = [
+            "id",
+            "company",
+            "employee",
+            "created_at",
+            "updated_at",
+            "company_slug",
+            "employee_username",
+        ]
+        read_only_fields = ["id", "company", "employee", "created_at", "updated_at"]
+
+    def validate(self, data):
+        request = self.context.get("request")
+        if not request:
+            raise serializers.ValidationError("Request is required in serializer context.")
+        user = request.user
+        
+        company_slug = data.get("company_slug")
+        employee_username = data.get("employee_username")
+        
+        try:
+            company = Company.objects.get(slug=company_slug)
+        except Company.DoesNotExist:
+            raise serializers.ValidationError({"company_slug": "Invalid company slug."})
+        
+        try:
+            employee = User.objects.get(username=employee_username)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"employee_username": "Employee not found."})
+        
+        if not (user.is_staff or company.employer == user):
+            raise serializers.ValidationError("Not authorized to add or update an employee for this company.")
+        
+        data["company"] = company
+        data["employee"] = employee
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop("company_slug", None)
+        validated_data.pop("employee_username", None)
+        return CompanyAccountant.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("company_slug", None)
+        validated_data.pop("employee_username", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+
+
+class CompanyExpertSerializer(serializers.ModelSerializer):
+    company_slug = serializers.CharField(write_only=True, required=True)
+    employee_username = serializers.CharField(write_only=True, required=True)
+    
+    class Meta:
+        model = CompanyExpert
+        fields = [
+            "id",
+            "company",
+            "employee",
+            "service_type",    # Expert-specific field for service type.
+            "created_at",
+            "updated_at",
+            "company_slug",
+            "employee_username",
+        ]
+        read_only_fields = ["id", "company", "employee", "created_at", "updated_at"]
+
+    def validate(self, data):
+        request = self.context.get("request")
+        if not request:
+            raise serializers.ValidationError("Request is required in serializer context.")
+        user = request.user
+        
+        company_slug = data.get("company_slug")
+        employee_username = data.get("employee_username")
+        
+        try:
+            company = Company.objects.get(slug=company_slug)
+        except Company.DoesNotExist:
+            raise serializers.ValidationError({"company_slug": "Invalid company slug."})
+        
+        try:
+            employee = User.objects.get(username=employee_username)
+        except User.DoesNotExist:
+            raise serializers.ValidationError({"employee_username": "Employee not found."})
+        
+        if not (user.is_staff or company.employer == user):
+            raise serializers.ValidationError("Not authorized to add or update an employee for this company.")
+        
+        data["company"] = company
+        data["employee"] = employee
+        return data
+
+    def create(self, validated_data):
+        validated_data.pop("company_slug", None)
+        validated_data.pop("employee_username", None)
+        return CompanyExpert.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        validated_data.pop("company_slug", None)
+        validated_data.pop("employee_username", None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
