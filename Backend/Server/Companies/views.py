@@ -1,11 +1,15 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 
 from .models import(
     Company,
     WorkDay,
     CompanyCard,
+    CompanyReceptionist,
+    CompanyAccountant,
+    CompanyExpert,
     CompanyFirstItem,
     CompanySecondItem,
     CompanyValidationStatus,
@@ -17,11 +21,15 @@ from .serializers import(
     CompanyFirstItemSerializer,
     CompanySecondItemSerializer,
     CompanyValidationStatusSerializer,
+    CompanyReceptionistSerializer,
+    CompanyAccountantSerializer,
+    CompanyExpertSerializer
 )
 from .permissions import (
     IsAdminOnly,
     IsAdminOrEmployer,
     IsAdminOrCompanyEmployer,
+    IsCompanyEmployeeOwnerOrAdmin
 )
 
 
@@ -455,3 +463,63 @@ class CompanyCardViewSet(viewsets.ViewSet):
             {"message": "Company card deleted successfully."},
             status=status.HTTP_204_NO_CONTENT
         )
+
+
+class CompanyReceptionistViewSet(viewsets.ViewSet):
+    """
+    ViewSet for managing Company Receptionist records.
+    
+    List:
+      - If 'company_slug' query parameter is provided, filter by that.
+      - Non-admin users (company owner with user type OW) only see records for companies they own.
+    
+    Retrieve:
+      - Accessible if the request user is admin, or if the user is the record's employee,
+        or if the user is the company employer.
+    
+    Create, Update, Destroy:
+      - Only allowed if the user is admin or if the user is the company employer.
+    """
+    permission_classes = [IsAuthenticated, IsCompanyEmployeeOwnerOrAdmin]
+
+    def list(self, request):
+        qs = CompanyReceptionist.objects.all()
+        company_slug = request.query_params.get('company_slug')
+        user = request.user
+
+        if company_slug:
+            qs = qs.filter(company__slug=company_slug)
+        else:
+            if not user.is_staff:
+                qs = qs.filter(company__employer=user)
+        serializer = CompanyReceptionistSerializer(qs, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        instance = get_object_or_404(CompanyReceptionist, pk=pk)
+        self.check_object_permissions(request, instance)
+        serializer = CompanyReceptionistSerializer(instance, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request):
+        serializer = CompanyReceptionistSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        serializer = CompanyReceptionistSerializer(instance, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, pk=None):
+        instance = get_object_or_404(CompanyReceptionist, pk=pk)
+        self.check_object_permissions(request, instance)
+        serializer = CompanyReceptionistSerializer(instance, data=request.data, partial=True,
+                                                   context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        serializer = CompanyReceptionistSerializer(instance, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def destroy(self, request, pk=None):
+        instance = get_object_or_404(CompanyReceptionist, pk=pk)
+        self.check_object_permissions(request, instance)
+        instance.delete()
+        return Response({"detail": "Record deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
