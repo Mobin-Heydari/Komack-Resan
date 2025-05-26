@@ -571,3 +571,53 @@ class CompanyAccountantViewSet(viewsets.ViewSet):
         self.check_object_permissions(request, instance)
         instance.delete()
         return Response({"detail": "Record deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+class CompanyExpertViewSet(viewsets.ViewSet):
+    """
+    ViewSet for managing Company Expert records.
+    """
+    permission_classes = [IsAuthenticated, IsCompanyEmployeeOwnerOrAdmin]
+
+    def list(self, request):
+        qs = CompanyExpert.objects.all()
+        company_slug = request.query_params.get('company_slug')
+        user = request.user
+
+        if company_slug:
+            qs = qs.filter(company__slug=company_slug)
+        else:
+            if not user.is_staff:
+                qs = qs.filter(company__employer=user)
+        serializer = CompanyExpertSerializer(qs, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        instance = get_object_or_404(CompanyExpert, pk=pk)
+        self.check_object_permissions(request, instance)
+        serializer = CompanyExpertSerializer(instance, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request):
+        serializer = CompanyExpertSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        serializer = CompanyExpertSerializer(instance, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, pk=None):
+        instance = get_object_or_404(CompanyExpert, pk=pk)
+        self.check_object_permissions(request, instance)
+        serializer = CompanyExpertSerializer(instance, data=request.data, partial=True,
+                                             context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        serializer = CompanyExpertSerializer(instance, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def destroy(self, request, pk=None):
+        instance = get_object_or_404(CompanyExpert, pk=pk)
+        self.check_object_permissions(request, instance)
+        instance.delete()
+        return Response({"detail": "Record deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
