@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 from .models import *
 
-from Addresses.serializers import CitySerializer
+from Addresses.serializers import CitySerializer, ProvinceSerializer
 from Items.serializers import FirstItemSerializer, SecondItemSerializer
 
 import datetime
@@ -328,6 +328,8 @@ class CompanySecondItemSerializer(serializers.ModelSerializer):
         return instance
     
 
+
+
 class CompanySerializer(serializers.ModelSerializer):
     logo = serializers.ImageField(required=False)
     banner = serializers.ImageField(required=False)
@@ -336,16 +338,26 @@ class CompanySerializer(serializers.ModelSerializer):
     workdays = WorkDaySerializer(many=True, read_only=True)
     companies_first_item = CompanyFirstItemSerializer(many=True, read_only=True)
     companies_second_item = CompanySecondItemSerializer(many=True, read_only=True)
-    # Use a write-only field for industry identification
-    industry_slug = serializers.CharField(write_only=True, help_text="The slug representing the industry.", required=False)
+    city = CitySerializer(read_only=True)
+    province = ProvinceSerializer(read_only=True)
+    # Use a write-only field for industry identification.
+    industry_slug = serializers.CharField(
+        write_only=True, help_text="The slug representing the industry.", required=False
+    )
+    # NEW write-only fields for location.
+    city_slug = serializers.CharField(
+        write_only=True, help_text="The slug representing the city.", required=False
+    )
+    province_slug = serializers.CharField(
+        write_only=True, help_text="The slug representing the province.", required=False
+    )
     name = serializers.CharField(required=False)
-
-
+    
     class Meta:
         model = Company
         fields = "__all__"
-        read_only_fields = ('employer', 'industry')  # employer is set based on the request user
-
+        read_only_fields = ('employer', 'industry')
+    
     def get_logo(self, obj):
         if obj.logo:
             return f"{get_full_host()}{obj.logo.url}"
@@ -368,36 +380,77 @@ class CompanySerializer(serializers.ModelSerializer):
         return value
 
     def validate(self, attrs):
+        """
+        In addition to the existing duplicate company check, process the location data.
+        
+        • On creation:
+            - Prevent duplicate companies for the same employer.
+            - If either city_slug or province_slug is provided, require both.
+            - Look up the corresponding City and Province objects.
+            - Validate that the city belongs to the province.
+            - Assign the objects to the validated data.
+        • On update:
+            - If location update is requested (i.e. either city_slug or province_slug is in the input),
+              require both fields and perform the same validations.
+        """
         request = self.context.get('request')
         employer = request.user if request else None
 
-        # Prevent duplicate companies for the same employer.
-        if employer and Company.objects.filter(employer=employer, name=attrs.get('name')).exists():
-            raise serializers.ValidationError("A company with this name already exists for you.")
+        # For creation only: prevent duplicates.
+        if not self.instance:
+            if employer and Company.objects.filter(employer=employer, name=attrs.get('name')).exists():
+                raise serializers.ValidationError("A company with this name already exists for you.")
+        
+        # Process location update if provided.
+        city_slug = attrs.pop("city_slug", None)
+        province_slug = attrs.pop("province_slug", None)
+        
+        # If one is provided, both must be.
+        if (city_slug or province_slug):
+            if not (city_slug and province_slug):
+                raise serializers.ValidationError({
+                    "city_slug": "Both city_slug and province_slug are required for location.",
+                    "province_slug": "Both city_slug and province_slug are required for location."
+                })
+            # Look up the province.
+            try:
+                province = Province.objects.get(slug=province_slug)
+            except Province.DoesNotExist:
+                raise serializers.ValidationError({"province_slug": "Province not found."})
+            # Look up the city.
+            try:
+                city = City.objects.get(slug=city_slug)
+            except City.DoesNotExist:
+                raise serializers.ValidationError({"city_slug": "City not found."})
+            # Validate that the city belongs to the province.
+            if city.province != province:
+                raise serializers.ValidationError({
+                    "city_slug": "The specified city is not located within the provided province."
+                })
+            # Attach the instances to validated data.
+            attrs["city"] = city
+            attrs["province"] = province
         return attrs
 
     def create(self, validated_data):
         request = self.context.get('request')
         employer = request.user
-
-        # Remove industry_slug and fetch the actual Industry instance
-        industry_slug = validated_data.pop('industry_slug')
-        industry = Industry.objects.get(slug=industry_slug)
-
+        # Remove industry_slug and fetch the actual Industry instance if provided.
+        industry_slug = validated_data.pop('industry_slug', None)
+        if industry_slug:
+            industry = Industry.objects.get(slug=industry_slug)
+            validated_data['industry'] = industry
         # Generate a slug for the company based on its name.
         generated_slug = slugify(validated_data.get('name'), allow_unicode=True)
         validated_data['slug'] = generated_slug
-
         # Force the is_validated field: only admin can set it.
         if not request.user.is_staff:
             # Owners (or any non-admins) cannot override is_validated at creation.
             validated_data['is_validated'] = False
-
-        # Create the company and its related validation status atomically.
+        # Set the employer based on the request user.
         with transaction.atomic():
             company = Company.objects.create(
                 employer=employer,
-                industry=industry,
                 **validated_data
             )
             CompanyValidationStatus.objects.create(company=company)
@@ -405,27 +458,21 @@ class CompanySerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         request = self.context.get('request')
-        print("Validated Data:", validated_data)  # Debugging print
-
         # If industry_slug is provided, update the company’s industry.
         industry_slug = validated_data.get('industry_slug', None)
         if industry_slug:
             industry = Industry.objects.get(slug=industry_slug)
             validated_data['industry'] = industry
-
         # Prevent non-admin users from updating the is_validated field.
         if not request.user.is_staff and 'is_validated' in validated_data:
             validated_data.pop('is_validated')
-
         # Optionally, if the name is updated, regenerate the slug.
         if 'name' in validated_data:
             validated_data['slug'] = slugify(validated_data['name'], allow_unicode=True)
-
         # Update instance fields.
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
         return instance
 
 
