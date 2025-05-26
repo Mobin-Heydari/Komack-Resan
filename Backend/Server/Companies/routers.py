@@ -239,3 +239,90 @@ class CompanyCardRouter(routers.DefaultRouter):
             path('<int:pk>/delete/', views.CompanyCardViewSet.as_view({'delete': 'destroy'}), name='company_card-destroy'),
         ]
         return default_urls + custom_urls
+
+
+
+class EmployeeRouter(routers.DefaultRouter):
+    """
+    Custom router for employee viewsets.
+
+    Endpoints under /employees/:
+
+    For Receptionists:
+      - List:           GET    /employees/receptionists/
+      - Create:         POST   /employees/receptionists/create/
+      - Retrieve:       GET    /employees/receptionists/<int:pk>/
+      - Update:         PUT/PATCH  /employees/receptionists/<int:pk>/
+      - Delete:         DELETE /employees/receptionists/<int:pk>/
+
+    For Accountants:
+      - List:           GET    /employees/accountants/
+      - Create:         POST   /employees/accountants/create/
+      - Retrieve:       GET    /employees/accountants/<int:pk>/
+      - Update:         PUT/PATCH  /employees/accountants/<int:pk>/
+      - Delete:         DELETE /employees/accountants/<int:pk>/
+
+    For Experts:
+      - List:           GET    /employees/experts/
+      - Create:         POST   /employees/experts/create/
+      - Retrieve:       GET    /employees/experts/<int:pk>/
+      - Update:         PUT/PATCH  /employees/experts/<int:pk>/
+      - Delete:         DELETE /employees/experts/<int:pk>/
+    """
+    def __init__(self):
+        super().__init__()
+        # Register the three viewsets with their respective prefixes.
+        self.register(r'receptionists', views.CompanyReceptionistViewSet, basename='receptionist')
+        self.register(r'accountants', views.CompanyAccountantViewSet, basename='accountant')
+        self.register(r'experts', views.CompanyExpertViewSet, basename='expert')
+
+    def get_urls(self):
+        default_urls = super().get_urls()
+        # Here we add custom URLs to mirror our style for the companies app.
+        custom_urls = [
+            path('', include([
+                # Receptionists endpoints:
+                path('receptionists/', include([
+                    # List: GET /employees/receptionists/
+                    path('', views.CompanyReceptionistViewSet.as_view({'get': 'list'})),
+                    # Create: POST /employees/receptionists/create/
+                    path('create/', views.CompanyReceptionistViewSet.as_view({'post': 'create'})),
+                    # Retrieve/Update/Delete: /employees/receptionists/<int:pk>/
+                    path('<int:pk>/', include([
+                        path('', views.CompanyReceptionistViewSet.as_view({
+                            'get': 'retrieve',
+                            'put': 'update',
+                            'patch': 'update',
+                            'delete': 'destroy'
+                        })),
+                    ])),
+                ])),
+                # Accountants endpoints:
+                path('accountants/', include([
+                    path('', views.CompanyAccountantViewSet.as_view({'get': 'list'})),
+                    path('create/', views.CompanyAccountantViewSet.as_view({'post': 'create'})),
+                    path('<int:pk>/', include([
+                        path('', views.CompanyAccountantViewSet.as_view({
+                            'get': 'retrieve',
+                            'put': 'update',
+                            'patch': 'update',
+                            'delete': 'destroy'
+                        })),
+                    ])),
+                ])),
+                # Experts endpoints:
+                path('experts/', include([
+                    path('', views.CompanyExpertViewSet.as_view({'get': 'list'})),
+                    path('create/', views.CompanyExpertViewSet.as_view({'post': 'create'})),
+                    path('<int:pk>/', include([
+                        path('', views.CompanyExpertViewSet.as_view({
+                            'get': 'retrieve',
+                            'put': 'update',
+                            'patch': 'update',
+                            'delete': 'destroy'
+                        })),
+                    ])),
+                ])),
+            ])),
+        ]
+        return default_urls + custom_urls
