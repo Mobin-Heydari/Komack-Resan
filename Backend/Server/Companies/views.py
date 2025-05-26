@@ -511,8 +511,7 @@ class CompanyReceptionistViewSet(viewsets.ViewSet):
     def update(self, request, pk=None):
         instance = get_object_or_404(CompanyReceptionist, pk=pk)
         self.check_object_permissions(request, instance)
-        serializer = CompanyReceptionistSerializer(instance, data=request.data, partial=True,
-                                                   context={'request': request})
+        serializer = CompanyReceptionistSerializer(instance, data=request.data, partial=True, context={'request': request})
         serializer.is_valid(raise_exception=True)
         instance = serializer.save()
         serializer = CompanyReceptionistSerializer(instance, context={'request': request})
@@ -520,6 +519,55 @@ class CompanyReceptionistViewSet(viewsets.ViewSet):
 
     def destroy(self, request, pk=None):
         instance = get_object_or_404(CompanyReceptionist, pk=pk)
+        self.check_object_permissions(request, instance)
+        instance.delete()
+        return Response({"detail": "Record deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+class CompanyAccountantViewSet(viewsets.ViewSet):
+    """
+    ViewSet for managing Company Accountant records.
+    """
+    permission_classes = [IsAuthenticated, IsCompanyEmployeeOwnerOrAdmin]
+
+    def list(self, request):
+        qs = CompanyAccountant.objects.all()
+        company_slug = request.query_params.get('company_slug')
+        user = request.user
+
+        if company_slug:
+            qs = qs.filter(company__slug=company_slug)
+        else:
+            if not user.is_staff:
+                qs = qs.filter(company__employer=user)
+        serializer = CompanyAccountantSerializer(qs, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, pk=None):
+        instance = get_object_or_404(CompanyAccountant, pk=pk)
+        self.check_object_permissions(request, instance)
+        serializer = CompanyAccountantSerializer(instance, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def create(self, request):
+        serializer = CompanyAccountantSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        serializer = CompanyAccountantSerializer(instance, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def update(self, request, pk=None):
+        instance = get_object_or_404(CompanyAccountant, pk=pk)
+        self.check_object_permissions(request, instance)
+        serializer = CompanyAccountantSerializer(instance, data=request.data, partial=True, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        instance = serializer.save()
+        serializer = CompanyAccountantSerializer(instance, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def destroy(self, request, pk=None):
+        instance = get_object_or_404(CompanyAccountant, pk=pk)
         self.check_object_permissions(request, instance)
         instance.delete()
         return Response({"detail": "Record deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
