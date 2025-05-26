@@ -6,7 +6,7 @@ from django.core.validators import RegexValidator
 
 from Users.models import User
 from Industries.models import Industry
-from Addresses.models import City
+from Addresses.models import City, Province
 from Items.models import FirstItem, SecondItem
 
 
@@ -450,34 +450,6 @@ class CompanySecondItem(models.Model):
         verbose_name = "آیتم دوم شرکت"
         verbose_name_plural = "آیتم های دوم شرکت"
 
-
-
-class CompanyAddress(models.Model):
-
-    city = models.ForeignKey(
-        City,
-        on_delete=models.CASCADE,
-        verbose_name="شهر"
-    )
-
-    company = models.OneToOneField(
-        "Companies.Company",
-        on_delete=models.CASCADE,
-        verbose_name="خدمات گیرنده"
-    )
-
-    address = models.TextField(verbose_name="آدرس")
-
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="ساخته شده")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="آپدیت شده")
-
-
-    class Meta:
-        verbose_name = "آدرس مشتری"
-        verbose_name_plural = "آدرس های مشتری ها"
-
-    def __str__(self):
-        return f"{self.title} - {self.address}"
 
 
 class CompanyCard(models.Model):

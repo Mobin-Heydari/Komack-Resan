@@ -328,79 +328,12 @@ class CompanySecondItemSerializer(serializers.ModelSerializer):
         return instance
     
 
-
-class CompanyAddressSerializer(serializers.ModelSerializer):
-    # Return nested city details for read.
-    city = CitySerializer(read_only=True)
-    # Write-only fields for city and company lookups.
-    city_slug = serializers.CharField(write_only=True, help_text="Slug of the associated city.")
-    company_slug = serializers.CharField(write_only=True, help_text="Slug of the associated company.")
-    
-    class Meta:
-        model = CompanyAddress
-        fields = ['id', 'city', 'city_slug', 'company_slug', 'address', 'created_at', 'updated_at']
-        read_only_fields = ['created_at', 'updated_at']
-    
-    def validate(self, attrs):
-        request = self.context.get('request')
-        data = self.initial_data  # Raw input data
-        
-        # Validate city_slug and fetch city.
-        city_slug = data.get('city_slug')
-        if not city_slug:
-            raise serializers.ValidationError({"city_slug": "This field is required."})
-        try:
-            city = City.objects.get(slug=city_slug)
-        except City.DoesNotExist:
-            raise serializers.ValidationError({"city_slug": f"No City exists with the slug '{city_slug}'."})
-        attrs['city'] = city
-
-        # Validate company_slug and fetch company.
-        company_slug = data.get('company_slug')
-        if not company_slug:
-            raise serializers.ValidationError({"company_slug": "This field is required."})
-        try:
-            company = Company.objects.get(slug=company_slug)
-        except Company.DoesNotExist:
-            raise serializers.ValidationError({"company_slug": f"No Company exists with the slug '{company_slug}'."})
-        
-        attrs['company'] = company
-        return attrs
-    
-    def create(self, validated_data):
-        validated_data.pop('city_slug', None)
-        validated_data.pop('company_slug', None)
-        return CompanyAddress.objects.create(**validated_data)
-    
-    def update(self, instance, validated_data):
-        request = self.context.get('request')
-
-        # Ensure only the company's employer can update the address.
-        if not request or not request.user or instance.company.employer != request.user:
-            raise serializers.ValidationError({"company": "You are not authorized to update this company's address."})
-
-        # Update city if city_slug is provided.
-        if 'city_slug' in self.initial_data:
-            city_slug = self.initial_data.get('city_slug')
-            try:
-                city = City.objects.get(slug=city_slug)
-            except City.DoesNotExist:
-                raise serializers.ValidationError({"city_slug": f"No City exists with the slug '{city_slug}'."})
-            instance.city = city
-
-        instance.address = validated_data.get('address', instance.address)
-        instance.save()
-        return instance
-
-
-    
 class CompanySerializer(serializers.ModelSerializer):
     logo = serializers.ImageField(required=False)
     banner = serializers.ImageField(required=False)
     intro_video = serializers.FileField(required=False)
     validation_status = CompanyValidationStatusSerializer(read_only=True)
     workdays = WorkDaySerializer(many=True, read_only=True)
-    address = CompanyAddressSerializer(read_only=True)
     companies_first_item = CompanyFirstItemSerializer(many=True, read_only=True)
     companies_second_item = CompanySecondItemSerializer(many=True, read_only=True)
     # Use a write-only field for industry identification

@@ -10,7 +10,6 @@ from .models import (
     WorkDay,
     CompanyFirstItem,
     CompanySecondItem,
-    CompanyAddress,
     CompanyCard,
 )
 
@@ -54,12 +53,6 @@ class CompanyValidationStatusInline(admin.StackedInline):
     verbose_name = "وضعیت تایید شرکت"
     verbose_name_plural = "وضعیت تایید شرکت"
 
-
-class CompanyAddressInline(admin.StackedInline):
-    model = CompanyAddress
-    extra = 0
-    verbose_name = "آدرس شرکت"
-    verbose_name_plural = "آدرس های شرکت"
 
 
 class CompanyCardInline(admin.StackedInline):
@@ -146,7 +139,6 @@ class CompanyAdmin(admin.ModelAdmin):
         CompanySecondItemInline,
         CompanyEmployeeInline,
         CompanyValidationStatusInline,
-        CompanyAddressInline,
         CompanyCardInline,
     ]
     
@@ -214,13 +206,6 @@ class CompanyFirstItemAdmin(admin.ModelAdmin):
 class CompanySecondItemAdmin(admin.ModelAdmin):
     list_display = ('second_item', 'compay')
     search_fields = ('second_item__name', 'compay__name')
-
-
-@admin.register(CompanyAddress)
-class CompanyAddressAdmin(admin.ModelAdmin):
-    list_display = ('company', 'city', 'address', 'created_at')
-    search_fields = ('company__name', 'city__name', 'address')
-    readonly_fields = ('created_at', 'updated_at',)
 
 
 @admin.register(CompanyCard)
