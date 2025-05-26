@@ -94,3 +94,59 @@ class IsAdminOrCompanyEmployer(BasePermission):
         
         # For unsafe methods, allow if the user is admin or if the employer of the item's company matches.
         return request.user.is_staff or (obj.compay.employer == request.user)
+
+
+
+class IsCompanyEmployeeOwnerOrAdmin(BasePermission):
+    """
+    Custom permission for managing company employee records.
+    
+    For list:
+      - Anyone who is authenticated can list, but the viewset will filter the queryset
+        (admin: all records; non-admin owner: only records belonging to their company).
+      
+    For create (POST):
+      - If the user is admin, allow.
+      - Otherwise, examine request.data for a 'company_slug' and only allow if the company’s employer matches the user.
+
+    For object-level actions (retrieve, update, destroy):
+      - Allow admins.
+      - For safe methods (GET), allow if the request user is the record’s employee or the company's employer.
+      - For update and delete, allow only if the request user is the company’s employer.
+    """
+    
+    def has_permission(self, request, view):
+        # Allow safe methods; object-level checks will work later.
+        if request.method in ["GET", "HEAD", "OPTIONS"]:
+            return True
+
+        # For creation, check for 'company_slug' in the request data.
+        if request.method == "POST":
+            if request.user.is_staff:
+                return True
+            company_slug = request.data.get('company_slug')
+            if not company_slug:
+                return False
+            # Lazy import to avoid circular dependency
+            from Companies.models import Company  
+            try:
+                company = Company.objects.get(slug=company_slug)
+            except Company.DoesNotExist:
+                return False
+            return company.employer == request.user
+
+        # For PUT/PATCH/DELETE, we return True here and let object-level permission handle the details.
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        # Admin users have full access.
+        if request.user.is_staff:
+            return True
+        
+        # For safe methods (GET, HEAD, OPTIONS), allow if the current user is either the employee or the company employer.
+        if request.method in ["GET", "HEAD", "OPTIONS"]:
+            return request.user == obj.employee or request.user == obj.company.employer
+        
+        # For non-safe methods (PUT, PATCH, DELETE),
+        # only allow if the current user is the company employer.
+        return request.user == obj.company.employer
