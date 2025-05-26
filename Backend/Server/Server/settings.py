@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'Invoices.apps.InvoicesConfig',
     'Payments.apps.PaymentsConfig',
     'Accounts.apps.AccountsConfig',
+    'Items.apps.ItemsConfig',
     'OneTimePasswords.apps.OnetimepasswordsConfig'
 ]
 
