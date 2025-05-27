@@ -35,22 +35,25 @@ class Service(models.Model):
     receptionist = models.ForeignKey(
         CompanyReceptionist,
         verbose_name="منشی سرویس",
-        on_delete=models.CASCADE,
-        related_name="receptionist_services"
+        on_delete=models.SET_NULL,
+        related_name="receptionist_services",
+        blank=True, null=True
     )
 
     accountant = models.ForeignKey(
         CompanyAccountant,
         verbose_name="حسابدار",
-        on_delete=models.CASCADE,
-        related_name="accountant_services"
+        on_delete=models.SET_NULL,
+        related_name="accountant_services",
+        blank=True, null=True
     )
 
     expert = models.ForeignKey(
         CompanyExpert,
         verbose_name="متخصص",
-        on_delete=models.CASCADE,
-        related_name="expert_services"
+        on_delete=models.SET_NULL,
+        related_name="expert_services",
+        blank=True, null=True
     )
 
     recipient = models.ForeignKey(
