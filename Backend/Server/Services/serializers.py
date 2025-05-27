@@ -185,3 +185,103 @@ class ServiceSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+
+class ServicePaymentSerializer(serializers.ModelSerializer):
+    # Write-only field to assign a company card via its ID.
+    company_card_id = serializers.IntegerField(write_only=True, required=False)
+    
+    class Meta:
+        model = ServicePayment
+        fields = [
+            "id",
+            "service",
+            "price",
+            "company_card",
+            "company_card_id",
+            "payment_status",
+            "payment_method",
+            "transaction_screenshot",
+            "paied_at",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id", "service", "paied_at", "created_at", "updated_at", "company_card"
+        ]
+    
+    def validate_company_card_id(self, value):
+        """
+        Ensure the provided company card exists and, if updating, belongs
+        to the same company as the related service.
+        """
+        try:
+            card = CompanyCard.objects.get(id=value)
+        except CompanyCard.DoesNotExist:
+            raise serializers.ValidationError("Company card not found.")
+        if self.instance:
+            if card.company != self.instance.service.company:
+                raise serializers.ValidationError(
+                    "The provided company card does not belong to the service's company."
+                )
+        return value
+
+    def update(self, instance, validated_data):
+        request = self.context.get("request")
+        user = request.user
+        service = instance.service
+
+        # Traditional update structure with role checks:
+        # Admin users can update all fields.
+        if user.is_staff:
+            if "company_card_id" in validated_data:
+                card_id = validated_data.pop("company_card_id")
+                try:
+                    card = CompanyCard.objects.get(id=card_id)
+                except CompanyCard.DoesNotExist:
+                    raise serializers.ValidationError({"company_card_id": "Company card not found."})
+                if card.company != service.company:
+                    raise serializers.ValidationError({
+                        "company_card_id": "The provided company card does not belong to the service's company."
+                    })
+                instance.company_card = card
+            instance.price = validated_data.get("price", instance.price)
+            instance.payment_status = validated_data.get("payment_status", instance.payment_status)
+            instance.payment_method = validated_data.get("payment_method", instance.payment_method)
+            instance.transaction_screenshot = validated_data.get("transaction_screenshot", instance.transaction_screenshot)
+            instance.save()
+            return instance
+
+        # If the user is the service recipient, allow only updating transaction_screenshot and payment_method.
+        elif service.recipient == user:
+            if "transaction_screenshot" in validated_data:
+                instance.transaction_screenshot = validated_data["transaction_screenshot"]
+            if "payment_method" in validated_data:
+                instance.payment_method = validated_data["payment_method"]
+            instance.save()
+            return instance
+
+        # If the user is the service accountant, allow updating price, payment_status, or company_card.
+        elif service.accountant == user:
+            if "price" in validated_data:
+                instance.price = validated_data["price"]
+            if "payment_status" in validated_data:
+                instance.payment_status = validated_data["payment_status"]
+            if "company_card_id" in validated_data:
+                card_id = validated_data["company_card_id"]
+                try:
+                    card = CompanyCard.objects.get(company=service.company, id=card_id)
+                except CompanyCard.DoesNotExist:
+                    raise serializers.ValidationError({"company_card_id": "Company card not found."})
+                if card.company != service.company:
+                    raise serializers.ValidationError({
+                        "company_card_id": "The provided company card does not belong to the service's company."
+                    })
+                instance.company_card = card
+            instance.save()
+            return instance
+
+        # Otherwise, the user is not authorized to update.
+        else:
+            raise serializers.ValidationError("You are not authorized to update this payment.")
