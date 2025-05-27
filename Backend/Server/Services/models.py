@@ -2,12 +2,17 @@ from django.db import models
 from Companies.models import Company, CompanyCard, CompanyAccountant, CompanyExpert, CompanyReceptionist
 from Users.models import User
 from Addresses.models import RecipientAddress
+from Items.models import FirstItem, SecondItem
 
 import uuid
 
 
 
 class Service(models.Model):
+
+    class ServiceType(models.TextChoices):
+        IN_HOUSE_SERVICE = 'IHS', 'خدمات در منزل'
+        IN_COMPANY_SERVICE = 'ICS', 'خدمات در شرکت'
 
     class ServiceStatusChoices(models.TextChoices):
         PENDING = 'PE', 'درحال بررسی'
@@ -62,8 +67,25 @@ class Service(models.Model):
         verbose_name="آدرس"
     )
 
+    first_item = models.ForeignKey(
+        FirstItem,
+        on_delete=models.SET_NULL,
+        verbose_name="آیتم یک",
+        related_name="first_item_services", 
+        blank=True, null=True
+    )
+
+    second_item = models.ForeignKey(
+        SecondItem,
+        on_delete=models.SET_NULL,
+        verbose_name="آیتم دو",
+        related_name="second_item_services",
+        blank=True, null=True
+    )
+
     title = models.CharField(max_length=255, verbose_name="عنوان")
 
+    phone = models.CharField(max_length=11, verbose_name="شماره تلفن")
 
     descriptions = models.TextField(verbose_name="توضیحات")
 
@@ -76,10 +98,14 @@ class Service(models.Model):
         verbose_name="وضعیت سرویس"
     )
 
-    is_invoiced = models.BooleanField(
-        default=False,
-        verbose_name="به فاکتور اضافه شده"
+    service_type = models.CharField(
+        max_length=3,
+        verbose_name="نوع خدمات",
+        choices=ServiceType.choices
     )
+
+    is_invoiced = models.BooleanField(default=False, verbose_name="به فاکتور اضافه شده")
+    is_validated_by_receptionist = models.BooleanField(default=False, verbose_name="تایید شده توسط منشی")
 
     started_at = models.DateTimeField(null=True, verbose_name="زمان شروع")
     finished_at = models.DateTimeField(null=True, verbose_name="زمان پایان")
