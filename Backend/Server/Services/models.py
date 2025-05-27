@@ -1,7 +1,9 @@
 from django.db import models
-from Companies.models import Company, CompanyCard
+from Companies.models import Company, CompanyCard, CompanyAccountant, CompanyExpert, CompanyReceptionist
 from Users.models import User
 from Addresses.models import RecipientAddress
+
+import uuid
 
 
 
@@ -24,6 +26,8 @@ class Service(models.Model):
         CASH = 'CA', 'نقدی'
         TRANSACTION = 'TR', 'کارت به کارت'
 
+    id = models.UUIDField(verbose_name="آیدیه سرویس", primary_key=True, default=uuid.uuid4)
+    
     company = models.ForeignKey(
         Company,
         on_delete=models.CASCADE,
@@ -39,11 +43,25 @@ class Service(models.Model):
         null=True, blank=True
     )
     
-    service_provider = models.ForeignKey(
-        User,
-        verbose_name="سرویس دهنده",
+    receptionist = models.ForeignKey(
+        CompanyReceptionist,
+        verbose_name="منشی سرویس",
         on_delete=models.CASCADE,
-        related_name="service_owner"
+        related_name="receptionist_services"
+    )
+
+    accountant = models.ForeignKey(
+        CompanyAccountant,
+        verbose_name="حسابدار",
+        on_delete=models.CASCADE,
+        related_name="accountant_services"
+    )
+
+    expert = models.ForeignKey(
+        CompanyExpert,
+        verbose_name="متخصص",
+        on_delete=models.CASCADE,
+        related_name="expert_services"
     )
 
     recipient = models.ForeignKey(
@@ -61,9 +79,12 @@ class Service(models.Model):
     )
 
     title = models.CharField(max_length=255, verbose_name="عنوان")
-    slug = models.SlugField(max_length=255, verbose_name="اسلاگ")
+
+
     descriptions = models.TextField(verbose_name="توضیحات")
-    
+
+    image = models.FileField(upload_to="Services/image/")
+
     payment_status = models.CharField(
         max_length=3,
         choices=PaymentStatusChoices.choices,

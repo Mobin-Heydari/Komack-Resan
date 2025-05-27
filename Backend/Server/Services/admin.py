@@ -10,7 +10,6 @@ class ServiceAdmin(admin.ModelAdmin):
     list_display = (
         'title',
         'company',
-        'service_provider',
         'recipient',
         'payment_status',
         'service_status',
@@ -27,7 +26,6 @@ class ServiceAdmin(admin.ModelAdmin):
         'service_provider__username', 
         'recipient__username'
     )
-    prepopulated_fields = {'slug': ('title',)}
     readonly_fields = (
         'created_at', 
         'updated_at', 
@@ -40,7 +38,6 @@ class ServiceAdmin(admin.ModelAdmin):
             'fields': (
                 'company', 
                 'company_card', 
-                'service_provider', 
                 'recipient', 
                 'recipient_address', 
                 'title', 
