@@ -11,4 +11,5 @@ service_router = ServiceRouter()
 
 urlpatterns = [
     path('service/', include(service_router.get_urls())),
+    path('payment/', include(service_router.get_urls())),
 ]

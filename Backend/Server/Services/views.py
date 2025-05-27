@@ -11,26 +11,26 @@ from .permissions import IsServiceActionAllowed, IsServicePaymentActionAllowed
 
 class ServiceViewSet(viewsets.ViewSet):
     """
-    A ViewSet for managing Service records using slug as lookup.
+    A ViewSet for managing Service records using id as lookup.
     
     Endpoints:
       - List:      GET /services/
       - Create:    POST /services/create/
-      - Retrieve:  GET /services/<slug>/
+      - Retrieve:  GET /services/<id>/
       - Update:    PUT/PATCH /services/<slug>/update/
     
     Note: The destroy method is not provided.
     """
     permission_classes = [IsServiceActionAllowed]
-    lookup_field = 'slug'
+    lookup_field = 'id'
 
     def list(self, request):
         queryset = Service.objects.all()
         serializer = ServiceSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
-    def retrieve(self, request, slug=None):
-        service = get_object_or_404(Service, slug=slug)
+    def retrieve(self, request, id):
+        service = get_object_or_404(Service, id=id)
         self.check_object_permissions(request, service)
         serializer = ServiceSerializer(service, context={'request': request})
         return Response(serializer.data)
@@ -46,8 +46,8 @@ class ServiceViewSet(viewsets.ViewSet):
             }, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def update(self, request, slug=None):
-        service = get_object_or_404(Service, slug=slug)
+    def update(self, request, id):
+        service = get_object_or_404(Service, id=id)
         self.check_object_permissions(request, service)
         serializer = ServiceSerializer(service, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
