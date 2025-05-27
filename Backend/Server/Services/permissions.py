@@ -1,5 +1,7 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
+from Companies.models import CompanyAccountant
+
 
 
 class IsServiceActionAllowed(BasePermission):
@@ -30,7 +32,7 @@ class IsServiceActionAllowed(BasePermission):
             return True
         
         # Allow if the user is an admin (user_type "AD").
-        if getattr(request.user, 'user_type', None) == "AD":
+        if request.user.is_staff:
             return True
         
         # Allow if the user is the Service's recipient.
@@ -41,4 +43,46 @@ class IsServiceActionAllowed(BasePermission):
         if obj.service_provider == request.user:
             return True
         
+        return False
+
+
+class IsServicePaymentActionAllowed(BasePermission):
+    """
+    Custom permission for the ServicePayment resource.
+    
+    - For safe methods (GET, HEAD, OPTIONS): Allow all.
+    
+    - For creation (POST): Allow only if the current user's type is "SC" (service recipient) 
+      or if the user is an admin (user_type "AD").
+    
+    - For update/delete (PUT/PATCH/DELETE): Allow if the user is an admin,
+      or if the user is the Service's recipient,
+      or if a CompanyAccountant record exists for the service's company with the current user as the employee.
+    """
+
+    def has_permission(self, request, view):
+        # Allow safe methods for everyone.
+        if request.method in SAFE_METHODS:
+            return True
+        
+        # For other methods (update/delete), return True here; object-level checks are applied later.
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        # Allow safe methods.
+        if request.method in SAFE_METHODS:
+            return True
+
+        # Admin users are allowed.
+        if request.user.is_staff:
+            return True
+        
+        # Allow if the current user is the Service's recipient.
+        if obj.service.recipient == request.user:
+            return True
+        
+        # Allow if the current user is registered as an accountant for the Service's company.
+        if CompanyAccountant.objects.filter(company=obj.service.company, employee=request.user).exists():
+            return True
+
         return False
