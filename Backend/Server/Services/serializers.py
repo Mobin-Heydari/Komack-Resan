@@ -17,8 +17,6 @@ class ServiceSerializer(serializers.ModelSerializer):
     recipient = serializers.SlugRelatedField(read_only=True, slug_field='full_name')
     company_card = CompanyCardSerializer(read_only=True)
     
-    # Computed human‐readable display fields.
-    payment_status_display = serializers.CharField(source='get_payment_status_display', read_only=True)
     service_status_display = serializers.CharField(source='get_service_status_display', read_only=True)
     
     # Computed fields.
@@ -29,14 +27,6 @@ class ServiceSerializer(serializers.ModelSerializer):
     company_slug = serializers.CharField(write_only=True, required=True)
     recipient_address_id = serializers.IntegerField(write_only=True, required=True)
     
-    # New field to allow assignment of a company card (only by company.employer).
-    company_card_id = serializers.IntegerField(write_only=True, required=False)
-    
-    # New fields for payment method.
-    payment_method = serializers.ChoiceField(
-        choices=Service.PaymentMethodChoices.choices, required=False
-    )
-    transaction_screenshot = serializers.ImageField(required=False, allow_null=True)
     
     class Meta:
         model = Service
@@ -48,13 +38,8 @@ class ServiceSerializer(serializers.ModelSerializer):
             "recipient",
             "recipient_address",
             "recipient_address_id",
-            "company_card_id",
-            "company_card",
             "title",
-            "slug",
             "descriptions",
-            "payment_status",
-            "payment_status_display",
             "service_status",
             "service_status_display",
             "is_invoiced",
@@ -64,7 +49,6 @@ class ServiceSerializer(serializers.ModelSerializer):
             "updated_at",
             "overall_score",
             "time_elapsed",
-            "payment_method",
             "transaction_screenshot",
         ]
         read_only_fields = [

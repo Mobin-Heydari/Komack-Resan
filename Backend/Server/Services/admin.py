@@ -11,14 +11,12 @@ class ServiceAdmin(admin.ModelAdmin):
         'title',
         'company',
         'recipient',
-        'payment_status',
         'service_status',
-        'payment_method',
         'is_invoiced',
         'overall_score_display',
         'created_at'
     )
-    list_filter = ('payment_status', 'service_status', 'payment_method', 'is_invoiced', 'company')
+    list_filter = ('service_status', 'is_invoiced', 'company')
     search_fields = (
         'title', 
         'descriptions', 
@@ -30,29 +28,23 @@ class ServiceAdmin(admin.ModelAdmin):
         'created_at', 
         'updated_at', 
         'overall_score_display', 
-        'transaction_screenshot_preview'
     )
     
     fieldsets = (
         ("اطلاعات اولیه سرویس", {
             'fields': (
                 'company', 
-                'company_card', 
                 'recipient', 
                 'recipient_address', 
                 'title', 
-                'slug', 
+                'id', 
                 'descriptions'
             )
         }),
         ("وضعیت سرویس و پرداخت", {
             'fields': (
-                'payment_status', 
                 'service_status', 
-                'payment_method', 
-                'is_invoiced', 
-                'transaction_screenshot', 
-                'transaction_screenshot_preview'
+                'is_invoiced',
             )
         }),
         ("زمانبندی", {

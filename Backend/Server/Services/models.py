@@ -9,11 +9,6 @@ import uuid
 
 class Service(models.Model):
 
-    class PaymentStatusChoices(models.TextChoices):
-        PAID = 'PA', 'پرداخت شده'
-        UNPAID = 'UP', 'پرداخت نشده'
-        FAILED = 'FA', 'ناموفق'
-    
     class ServiceStatusChoices(models.TextChoices):
         PENDING = 'PE', 'درحال بررسی'
         IN_PROGRESS = 'IP', 'درحال اجرا'
@@ -21,26 +16,15 @@ class Service(models.Model):
         CANCELED = 'CA', 'کنسل شده'
         FAILED = 'FA', 'شکست خورده'
         REPORTED = 'RE', 'گزارش شده'
-
-    class PaymentMethodChoices(models.TextChoices):
-        CASH = 'CA', 'نقدی'
-        TRANSACTION = 'TR', 'کارت به کارت'
+    
 
     id = models.UUIDField(verbose_name="آیدیه سرویس", primary_key=True, default=uuid.uuid4)
-    
+
     company = models.ForeignKey(
         Company,
         on_delete=models.CASCADE,
         related_name="service_company",
         verbose_name="شرکت"
-    )
-
-    company_card = models.ForeignKey(
-        CompanyCard,
-        on_delete=models.SET_NULL,
-        related_name="service_company_card",
-        verbose_name="کارت",
-        null=True, blank=True
     )
     
     receptionist = models.ForeignKey(
@@ -85,32 +69,11 @@ class Service(models.Model):
 
     image = models.FileField(upload_to="Services/image/")
 
-    payment_status = models.CharField(
-        max_length=3,
-        choices=PaymentStatusChoices.choices,
-        default=PaymentStatusChoices.UNPAID,
-        verbose_name="وضعیت پرداخت"
-    )
-
     service_status = models.CharField(
         max_length=3,
         choices=ServiceStatusChoices.choices,
         default=ServiceStatusChoices.PENDING,
         verbose_name="وضعیت سرویس"
-    )
-
-    payment_method = models.CharField(
-        max_length=20,
-        choices=PaymentMethodChoices.choices,
-        verbose_name="روش پرداخت",
-        null=True, blank=True
-    )
-
-    transaction_screenshot = models.ImageField(
-        upload_to='Services/transaction_screenshots/',
-        null=True,
-        blank=True,
-        verbose_name="تصویر فاکتور تراکنش"
     )
 
     is_invoiced = models.BooleanField(
@@ -150,3 +113,63 @@ class Service(models.Model):
             score = self.score
             return (score.quality + score.behavior + score.time) / 3
         return None
+
+
+class ServicePayment(models.Model):
+
+    class PaymentStatusChoices(models.TextChoices):
+        PAID = 'PA', 'پرداخت شده'
+        UNPAID = 'UP', 'پرداخت نشده'
+        FAILED = 'FA', 'ناموفق'
+
+    class PaymentMethodChoices(models.TextChoices):
+        CASH = 'CA', 'نقدی'
+        TRANSACTION = 'TR', 'کارت به کارت'
+    
+
+    service = models.OneToOneField(
+        Service,
+        on_delete=models.CASCADE,
+        verbose_name="سرویس",
+        related_name="service_payment"
+    )
+
+    price = models.BigIntegerField(verbose_name="قیمت")
+
+    company_card = models.ForeignKey(
+        CompanyCard,
+        on_delete=models.SET_NULL,
+        related_name="service_company_card",
+        verbose_name="کارت",
+        null=True, blank=True
+    )
+
+    payment_status = models.CharField(
+        max_length=3,
+        choices=PaymentStatusChoices.choices,
+        default=PaymentStatusChoices.UNPAID,
+        verbose_name="وضعیت پرداخت"
+    )
+
+    payment_method = models.CharField(
+        max_length=20,
+        choices=PaymentMethodChoices.choices,
+        verbose_name="روش پرداخت",
+        null=True, blank=True
+    )
+
+    transaction_screenshot = models.ImageField(
+        upload_to='Services/transaction_screenshots/',
+        verbose_name="تصویر فاکتور تراکنش",
+        null=True, blank=True
+    )
+
+    paied_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ پرداخت")
+
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
+
+
+    class Meta:
+        verbose_name = "اطلاعات پرداخت سرویس"
+        verbose_name_plural = "اطلاعات پرداخت سرویس ها"
