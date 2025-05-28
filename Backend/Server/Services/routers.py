@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework import routers
-from .views import ServiceViewSet
+from .views import ServicePaymentViewSet, ServiceViewSet
 
 
 
@@ -41,11 +41,6 @@ class ServiceRouter(routers.DefaultRouter):
 
 
 
-
-from django.urls import include, path
-from rest_framework import routers
-from .views import ServicePaymentViewSet
-
 class ServicePaymentRouter(routers.DefaultRouter):
     """
     Custom router for ServicePaymentViewSet.
@@ -67,11 +62,11 @@ class ServicePaymentRouter(routers.DefaultRouter):
             path('', include([
                 # List route: GET /service-payments/
                 path('', ServicePaymentViewSet.as_view({'get': 'list'}), name='service-payment-list'),
-                # Detail routes using the int id as lookup.
-                path('<int:id>/', include([
-                    # Retrieve route: GET /service-payments/<int:id>/
+                # Detail routes using the uuid id as lookup.
+                path('<uuid:service_id>/', include([
+                    # Retrieve route: GET /service-payments/<uuid:service_id>/
                     path('', ServicePaymentViewSet.as_view({'get': 'retrieve'}), name='service-payment-detail'),
-                    # Update route: PUT/PATCH /service-payments/<int:id>/update/
+                    # Update route: PUT/PATCH /service-payments/<uuid:service_id>/update/
                     path('update/', ServicePaymentViewSet.as_view({'put': 'update', 'patch': 'update'}), name='service-payment-update'),
                 ])),
             ])),

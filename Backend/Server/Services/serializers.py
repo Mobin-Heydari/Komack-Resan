@@ -291,20 +291,16 @@ class ServicePaymentSerializer(serializers.ModelSerializer):
             instance.payment_status = validated_data.get("payment_status", instance.payment_status)
             instance.payment_method = validated_data.get("payment_method", instance.payment_method)
             instance.transaction_screenshot = validated_data.get("transaction_screenshot", instance.transaction_screenshot)
-            instance.save()
-            return instance
 
         # If the user is the service recipient, allow only updating transaction_screenshot and payment_method.
-        elif service.recipient == user:
+        if service.recipient == user:
             if "transaction_screenshot" in validated_data:
                 instance.transaction_screenshot = validated_data["transaction_screenshot"]
             if "payment_method" in validated_data:
                 instance.payment_method = validated_data["payment_method"]
-            instance.save()
-            return instance
 
         # If the user is the service accountant, allow updating price, payment_status, or company_card.
-        elif service.accountant == user:
+        if service.accountant.employee == user:
             if "price" in validated_data:
                 instance.price = validated_data["price"]
             if "payment_status" in validated_data:
@@ -316,9 +312,6 @@ class ServicePaymentSerializer(serializers.ModelSerializer):
                 except CompanyCard.DoesNotExist:
                     raise serializers.ValidationError({"company_card_id": "Company card not found."})
                 instance.company_card = card
-            instance.save()
-            return instance
-
-        # Otherwise, the user is not authorized to update.
-        else:
-            raise serializers.ValidationError("You are not authorized to update this payment.")
+        
+        instance.save()
+        return instance

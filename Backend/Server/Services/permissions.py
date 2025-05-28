@@ -74,9 +74,6 @@ class IsServicePaymentActionAllowed(BasePermission):
         return True
 
     def has_object_permission(self, request, view, obj):
-        # Allow safe methods.
-        if request.method in SAFE_METHODS:
-            return True
 
         # Admin users are allowed.
         if request.user.is_staff:

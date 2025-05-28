@@ -52,7 +52,7 @@ class ServiceViewSet(viewsets.ViewSet):
         serializer = ServiceSerializer(service, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             service = serializer.save()
-            response_serializer = ServiceSerializer(service, context={'request': request}, partial=True)
+            response_serializer = ServiceSerializer(service, context={'request': request})
             return Response({
                 'message': 'Service updated successfully.',
                 'data': response_serializer.data
@@ -67,32 +67,34 @@ class ServicePaymentViewSet(viewsets.ViewSet):
     Endpoints:
       - List:      GET /service-payments/
       - Create:    POST /service-payments/create/
-      - Retrieve:  GET /service-payments/<id>/
-      - Update:    PUT/PATCH /service-payments/<id>/update/
+      - Retrieve:  GET /service-payments/<service_id>/
+      - Update:    PUT/PATCH /service-payments/<service_id>/update/
       
     Note: The destroy method is not provided.
     """
     permission_classes = [IsServicePaymentActionAllowed]
-    lookup_field = 'id'
+    lookup_field = 'service_id'
 
     def list(self, request):
-        queryset = ServicePayment.objects.all()
-        serializer = ServicePaymentSerializer(queryset, many=True, context={'request': request})
+        if request.user.is_staff:
+            queryset = ServicePayment.objects.all()
+            serializer = ServicePaymentSerializer(queryset, many=True, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response({"massage": "you dont have the permission"}, status=status.HTTP_403_FORBIDDEN)
+
+    def retrieve(self, request, service_id):
+        instance = get_object_or_404(ServicePayment, service__id=service_id)
+        self.check_object_permissions(request, instance)
+        serializer = ServicePaymentSerializer(instance, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    def retrieve(self, request, id=None):
-        payment = get_object_or_404(ServicePayment, id=id)
-        self.check_object_permissions(request, payment)
-        serializer = ServicePaymentSerializer(payment, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    def update(self, request, id=None):
-        payment = get_object_or_404(ServicePayment, id=id)
-        self.check_object_permissions(request, payment)
-        serializer = ServicePaymentSerializer(payment, data=request.data, partial=True, context={'request': request})
+    def update(self, request, service_id):
+        instance = get_object_or_404(ServicePayment, service__id=service_id)
+        self.check_object_permissions(request, instance)
+        serializer = ServicePaymentSerializer(instance, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
-            payment = serializer.save()
-            response_serializer = ServicePaymentSerializer(payment, context={'request': request})
+            instance = serializer.save()
+            response_serializer = ServicePaymentSerializer(instance, context={'request': request})
             return Response({
                 'message': 'Payment updated successfully.',
                 'data': response_serializer.data
