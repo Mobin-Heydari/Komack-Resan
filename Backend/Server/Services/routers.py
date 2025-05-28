@@ -31,6 +31,8 @@ class ServiceRouter(routers.DefaultRouter):
                 path('my-services/', ServiceViewSet.as_view({'get': 'my_services'}), name='my-services'),
                 # Set as the receptionist service
                 path('set-receptionist/<uuid:id>/', ServiceViewSet.as_view({'get': 'set_receptionist_service'}), name='set-receptionist'),
+                # Set as the accountant service
+                path('set-accountant/<uuid:id>/', ServiceViewSet.as_view({'get': 'set_accountant_service'}), name='set-accountant'),
                 # Retrieve route: GET /services/detail/<id>/
                 path('detail/<uuid:id>/', ServiceViewSet.as_view({'get': 'retrieve'}), name='service-detail'),
                 # Update route: PUT/PATCH /services/update/<id>/
