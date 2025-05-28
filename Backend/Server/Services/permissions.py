@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
-from Companies.models import CompanyAccountant
+from Companies.models import CompanyAccountant, CompanyExpert, CompanyReceptionist
 
 
 
@@ -36,11 +36,16 @@ class IsServiceActionAllowed(BasePermission):
             return True
         
         # Allow if the user is the Service's recipient.
-        if obj.recepient == request.user:
+        if obj.recipient == request.user:
             return True
         
-        # Allow if the user is the Service's provider.
-        if obj.service_provider == request.user:
+        if obj.accountant.employee == request.user:
+            return True
+        
+        if obj.expert.employee == request.user:
+            return True
+        
+        if obj.receptionist.employee == request.user:
             return True
         
         return False
@@ -82,7 +87,7 @@ class IsServicePaymentActionAllowed(BasePermission):
             return True
         
         # Allow if the current user is registered as an accountant for the Service's company.
-        if CompanyAccountant.objects.filter(company=obj.service.company, employee=request.user).exists():
+        if obj.service.accountant.employee == request.user:
             return True
 
         return False

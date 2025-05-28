@@ -52,7 +52,7 @@ class ServiceViewSet(viewsets.ViewSet):
         serializer = ServiceSerializer(service, data=request.data, partial=True, context={'request': request})
         if serializer.is_valid():
             service = serializer.save()
-            response_serializer = ServiceSerializer(service, context={'request': request})
+            response_serializer = ServiceSerializer(service, context={'request': request}, partial=True)
             return Response({
                 'message': 'Service updated successfully.',
                 'data': response_serializer.data

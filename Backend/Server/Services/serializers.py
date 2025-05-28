@@ -5,13 +5,15 @@ from Companies.models import Company, CompanyCard, CompanyReceptionist, CompanyA
 from Companies.serializers import CompanyCardSerializer
 from Addresses.models import RecipientAddress
 
+from Items.models import FirstItem, SecondItem
+from Items.serializers import FirstItemSerializer, SecondItemSerializer
+
 
 
 
 class ServiceSerializer(serializers.ModelSerializer):
     # Read-only fields for display
     company = serializers.SlugRelatedField(read_only=True, slug_field='name')
-    service_provider = serializers.SlugRelatedField(read_only=True, slug_field='full_name')
     recipient = serializers.SlugRelatedField(read_only=True, slug_field='full_name')
     company_card = CompanyCardSerializer(read_only=True)
     
@@ -22,6 +24,8 @@ class ServiceSerializer(serializers.ModelSerializer):
     
     # Write-only helper fields for lookups
     company_slug = serializers.CharField(write_only=True, required=True)
+    first_item_slug = serializers.CharField(write_only=True, required=False)
+    second_item_slug = serializers.CharField(write_only=True, required=False)
     recipient_address_id = serializers.IntegerField(write_only=True, required=True)
     # PAYMENT fields have been removed from this serializer.
     
@@ -31,8 +35,10 @@ class ServiceSerializer(serializers.ModelSerializer):
             "id",
             "company",
             "company_slug",
-            "service_provider",
             "recipient",
+            "accountant",
+            "receptionist",
+            "expert",
             "recipient_address",
             "recipient_address_id",
             "company_card",
@@ -47,17 +53,22 @@ class ServiceSerializer(serializers.ModelSerializer):
             "is_validated_by_receptionist",
             "first_item",
             "second_item",
+            "suggested_time",
             "started_at",
             "finished_at",
             "created_at",
             "updated_at",
             "overall_score",
             "time_elapsed",
+            "first_item_slug",
+            "second_item_slug",
         ]
         read_only_fields = [
             "company",
-            "service_provider",
             "recipient",
+            "accountant",
+            "receptionist",
+            "expert",
             "recipient_address",
             "is_invoiced",
             "created_at",
@@ -79,7 +90,6 @@ class ServiceSerializer(serializers.ModelSerializer):
         """
         CREATE:
           - Use company_slug to look up and validate the Company.
-          - Assign the company's employer as service_provider.
           - Look up the RecipientAddress using recipient_address_id.
           - Set the current user as the recipient.
           - (No need for slug handling as the id is an auto-generated UUID.)
@@ -91,6 +101,8 @@ class ServiceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"title": "Title is required."})
         if not validated_data.get("descriptions"):
             raise serializers.ValidationError({"descriptions": "Description is required."})
+        if not validated_data.get("suggested_time"):
+            raise serializers.ValidationError({"suggested_time": "Suggested time is required."})
         
         # Lookup Company
         company_slug = validated_data.pop("company_slug", None)
@@ -106,8 +118,6 @@ class ServiceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"company": "The company is currently off season."})
         validated_data["company"] = company
 
-        # Set service_provider & recipient
-        validated_data["service_provider"] = company.employer
         validated_data["recipient"] = user
 
         # Lookup RecipientAddress
@@ -115,76 +125,107 @@ class ServiceSerializer(serializers.ModelSerializer):
         if not recipient_address_id:
             raise serializers.ValidationError({"recipient_address_id": "Recipient address id is required."})
         try:
-            recipient_address = RecipientAddress.objects.get(id=recipient_address_id)
+            recipient_address = RecipientAddress.objects.get(id=recipient_address_id, recipient=user)
         except RecipientAddress.DoesNotExist:
             raise serializers.ValidationError({"recipient_address_id": "Recipient address not found."})
         validated_data["recipient_address"] = recipient_address
 
+        first_item_slug = validated_data.pop('first_item_slug', None)
+        second_item_slug = validated_data.pop('second_item_slug', None)
+
+        if first_item_slug:
+            try:
+                first_item = FirstItem.objects.get(slug=first_item_slug)
+            except:
+                raise serializers.ValidationError({"First item": "First item not find."})
+
+        if second_item_slug:
+            try:
+                second_item = SecondItem.objects.get(slug=second_item_slug)
+            except:
+                raise serializers.ValidationError({"First item": "First item not find."})
+        
+        validated_data['first_item'] = first_item
+        validated_data['second_item'] = second_item
+        
         instance = Service.objects.create(**validated_data)
         return instance
 
     def update(self, instance, validated_data):
         """
-        UPDATE (Traditional structure without an allowed_fields set):
-        
+        Update the Service instance.
+
         * If the current user is the service recipient (creator), update basic fields:
-            title, phone, descriptions, image, first_item, second_item, service_type.
-        * If the current user is a receptionist – either the one already assigned OR if a
-          CompanyReceptionist exists for the service's company with the current user – update:
-            is_validated_by_receptionist, service_status, and receptionist if provided.
-        * If the current user is an accountant (either already assigned or found in CompanyAccountant
-          for the service's company), update the accountant field.
-        * If the current user is an expert (either already assigned or found in CompanyExpert for the service's
-          company), update the expert field and (if provided) service_status.
-        * Always update the recipient_address if provided.
+            title, phone, descriptions, image, first_item, second_item, service_type, recipient_address.
+        * If the current user is a receptionist – either already assigned or exists in CompanyReceptionist for the
+        service's company – update is_validated_by_receptionist, service_status and receptionist.
+        * If the current user is an accountant (either already assigned or found in CompanyAccountant for the
+        service's company), update the accountant field.
+        * If the current user is an expert (either already assigned or exists in CompanyExpert for the
+        service's company), update the expert field (and service_status, started_at, finished_at if provided).
         """
         request = self.context.get("request")
         user = request.user
 
-        # Service recipient updates (creator)
+        # --- Service recipient updates (creator) ---
         if instance.recipient == user:
             if "title" in validated_data:
                 instance.title = validated_data["title"]
+
             if "phone" in validated_data:
                 instance.phone = validated_data["phone"]
+
             if "descriptions" in validated_data:
                 instance.descriptions = validated_data["descriptions"]
+
             if "image" in validated_data:
                 instance.image = validated_data["image"]
-            if "first_item" in validated_data:
-                instance.first_item = validated_data["first_item"]
-            if "second_item" in validated_data:
-                instance.second_item = validated_data["second_item"]
+
+            # Lookup first_item using 'first_item_slug'
+            if "first_item_slug" in validated_data:
+                try:
+                    first_item = FirstItem.objects.get(slug=validated_data["first_item_slug"])
+                except FirstItem.DoesNotExist:
+                    raise serializers.ValidationError({"first_item_slug": "First item not found."})
+                instance.first_item = first_item
+
+            # Lookup second_item using 'second_item_slug'
+            if "second_item_slug" in validated_data:
+                try:
+                    second_item = SecondItem.objects.get(slug=validated_data["second_item_slug"])
+                except SecondItem.DoesNotExist:
+                    raise serializers.ValidationError({"second_item_slug": "Second item not found."})
+                instance.second_item = second_item
+
             if "service_type" in validated_data:
                 instance.service_type = validated_data["service_type"]
 
-        # Receptionist role (either already assigned or exists for the company with current user)
-        if instance.receptionist or CompanyReceptionist.objects.filter(company=instance.company, employee=user).exists():
+            if "recipient_address_id" in validated_data:
+                try:
+                    address = RecipientAddress.objects.get(id=validated_data["recipient_address_id"], recipient=user)
+                except RecipientAddress.DoesNotExist:
+                    raise serializers.ValidationError({"recipient_address_id": "Address not found."})
+                instance.recipient_address = address
+
+        if instance.receptionist.employee == user:
             if "is_validated_by_receptionist" in validated_data:
                 instance.is_validated_by_receptionist = validated_data["is_validated_by_receptionist"]
             if "service_status" in validated_data:
                 instance.service_status = validated_data["service_status"]
-            if "receptionist" in validated_data:
-                instance.receptionist = validated_data["receptionist"]
 
-        # Accountant role – update accountant field if allowed.
-        if instance.accountant or CompanyAccountant.objects.filter(company=instance.company, employee=user).exists():
-            if "accountant" in validated_data:
-                instance.accountant = validated_data["accountant"]
-
-        # Expert role – update expert field and service_status if provided.
-        if instance.expert or CompanyExpert.objects.filter(company=instance.company, employee=user).exists():
+        if instance.expert.employee == user:
             if "expert" in validated_data:
                 instance.expert = validated_data["expert"]
             if "service_status" in validated_data:
                 instance.service_status = validated_data["service_status"]
-
-        # Always update recipient_address if provided.
-        if "recipient_address" in validated_data:
-            instance.recipient_address = validated_data["recipient_address"]
+            if "started_at" in validated_data:
+                instance.started_at = validated_data["started_at"]
+            if "finished_at" in validated_data:
+                instance.finished_at = validated_data["finished_at"]
 
         instance.save()
         return instance
+
 
 
 
@@ -274,10 +315,6 @@ class ServicePaymentSerializer(serializers.ModelSerializer):
                     card = CompanyCard.objects.get(company=service.company, id=card_id)
                 except CompanyCard.DoesNotExist:
                     raise serializers.ValidationError({"company_card_id": "Company card not found."})
-                if card.company != service.company:
-                    raise serializers.ValidationError({
-                        "company_card_id": "The provided company card does not belong to the service's company."
-                    })
                 instance.company_card = card
             instance.save()
             return instance
