@@ -1,25 +1,8 @@
 from rest_framework import routers
 from django.urls import path, include
 
-from .views import UserViewSet, IdCardViewSet
+from .views import UserViewSet
 
-
-
-
-class IdCardRouter(routers.DefaultRouter):
-    def __init__(self):
-        super().__init__()
-        self.register(r'', IdCardViewSet, basename='users')
-
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('', include([
-                path('', IdCardViewSet.as_view({'get': 'list'})),
-                path('<int:pk>/', IdCardViewSet.as_view({'get': 'retrieve', 'put': 'update'})),
-            ])),
-        ]
-        return urls + custom_urls
 
 
 

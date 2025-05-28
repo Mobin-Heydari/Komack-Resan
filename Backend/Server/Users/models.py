@@ -3,43 +3,6 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from .managers import UserManager
 
 
-class IdCardInFormation(models.Model):
-    class IdCardStatus(models.TextChoices):
-        PENDING = 'P', 'درحال برسی'
-        VERIFIED = 'V', 'تایید شده'
-        REJECTED = 'R', 'رد شده'
-
-    id_card_number = models.CharField(
-        verbose_name="شماره ملی",
-        max_length=13,
-        blank=True,
-        null=True
-    )
-
-    id_card = models.FileField(
-        upload_to='Users/id_cards/',
-        verbose_name="کارت ملی",
-        help_text="بارگذاری تصویر/اسکن کارت ملی",
-        blank=True,
-        null=True
-    )
-
-    id_card_status = models.CharField(
-        max_length=1,
-        choices=IdCardStatus.choices,
-        default=IdCardStatus.PENDING,
-        verbose_name="وضعیت کارت ملی",
-        help_text="وضعیت بررسی کارت ملی"
-    )
-
-    class Meta:
-        verbose_name = "اطلاعات کارت ملی"
-        verbose_name_plural = "اطلاعات کارت ملی ها"
-
-    def __str__(self):
-        return f"اطلاعات کارت ملی کاربر : {self.id_card_info.username}"
-
-
 
 class User(AbstractBaseUser, PermissionsMixin):
     class UserTypes(models.TextChoices):
@@ -53,15 +16,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         ACTIVE = "ACT", "فعال"
         SUSPENDED = "SUS", "تعلیق شده"
 
-
-    id_card_info = models.OneToOneField(
-        IdCardInFormation,
-        on_delete=models.SET_NULL,
-        verbose_name="اطلاعات کارت ملی",
-        related_name="id_card_info",
-        null=True,
-        blank=True
-    )
 
     user_type = models.CharField(
         max_length=2, 
