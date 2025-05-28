@@ -92,6 +92,17 @@ class ServiceViewSet(viewsets.ViewSet):
             return Response({"massage": "You have became the accountant in this service"}, status=status.HTTP_202_ACCEPTED)
         else:
             return Response({"massage": "You are not a accountant in this company"})
+        
+    
+    def set_expert_service(self, request, id):
+        queryset = get_object_or_404(Service, id=id)
+        if CompanyExpert.objects.filter(company=queryset.company, employee=request.user).exists():
+            instance = CompanyExpert.objects.get(company=queryset.company, employee=request.user)
+            queryset.expert = instance
+            queryset.save()
+            return Response({"massage": "You have became the expert in this service"}, status=status.HTTP_202_ACCEPTED)
+        else:
+            return Response({"massage": "You are not a expert in this company"})
 
 
 class ServicePaymentViewSet(viewsets.ViewSet):
