@@ -86,7 +86,7 @@ class RecipientAddressSerializer(serializers.ModelSerializer):
         help_text="Slug of the associated city."
     )
     # For read operations, display the recipient's username.
-    Recipient = serializers.SlugRelatedField(
+    recipient = serializers.SlugRelatedField(
         read_only=True,
         slug_field='username'
     )
@@ -94,7 +94,7 @@ class RecipientAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = RecipientAddress
         fields = [
-            'id', 'city', 'city_slug', 'Recipient', 
+            'id', 'city', 'city_slug', 'recipient', 
             'title', 'address', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
@@ -118,10 +118,10 @@ class RecipientAddressSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         # Remove the write-only field.
         validated_data.pop('city_slug', None)
-        # Automatically assign the current user as the Recipient.
+        # Automatically assign the current user as the recipient.
         request = self.context.get('request')
         if request and request.user and request.user.is_authenticated:
-            validated_data['Recipient'] = request.user
+            validated_data['recipient'] = request.user
         else:
             raise serializers.ValidationError("Authenticated user required.")
         return RecipientAddress.objects.create(**validated_data)

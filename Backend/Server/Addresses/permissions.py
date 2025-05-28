@@ -44,9 +44,6 @@ class RecipientAddressPermission(BasePermission):
         return request.user and (request.user.is_staff or getattr(request.user, 'user_type', None) == "SC")
     
     def has_object_permission(self, request, view, obj):
-        # Allow safe methods for any object.
-        if request.method in SAFE_METHODS:
-            return True
         
-        # For object-level modifying actions, similarly allow only admin or SC users.
-        return request.user and (request.user.is_staff or getattr(request.user, 'user_type', None) == "SC")
+        if obj.recipient == request.user:
+            return True
