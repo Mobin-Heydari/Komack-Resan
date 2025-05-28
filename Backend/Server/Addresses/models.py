@@ -58,7 +58,7 @@ class RecipientAddress(models.Model):
         verbose_name="شهر"
     )
 
-    Recipient = models.ForeignKey(
+    recipient = models.ForeignKey(
         "Users.User",
         on_delete=models.CASCADE,
         related_name='addresses',
