@@ -110,8 +110,9 @@ class Service(models.Model):
     is_invoiced = models.BooleanField(default=False, verbose_name="به فاکتور اضافه شده")
     is_validated_by_receptionist = models.BooleanField(default=False, verbose_name="تایید شده توسط منشی")
 
-    started_at = models.DateTimeField(null=True, verbose_name="زمان شروع")
-    finished_at = models.DateTimeField(null=True, verbose_name="زمان پایان")
+    suggested_time = models.DateTimeField(null=True, blank=True, verbose_name="زمان پیشنهادی شروع")
+    started_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان شروع")
+    finished_at = models.DateTimeField(null=True, blank=True, verbose_name="زمان پایان")
 
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="تاریخ ایجاد")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="تاریخ به‌روزرسانی")
