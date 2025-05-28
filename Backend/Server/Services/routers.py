@@ -27,16 +27,15 @@ class ServiceRouter(routers.DefaultRouter):
                 path('', ServiceViewSet.as_view({'get': 'list'}), name='service-list'),
                 # Create route: POST /services/create/
                 path('', ServiceViewSet.as_view({'post': 'create'}), name='service-create'),
-                # Detail routes using id.
-                path('<uuid:id>/', include([
-                    # Retrieve route: GET /services/<id>/
-                    path('', ServiceViewSet.as_view({'get': 'retrieve'}), name='service-detail'),
-                    # Update route: PUT/PATCH /services/<id>/update/
-                    path('', ServiceViewSet.as_view({'put': 'update', 'patch': 'update'}), name='service-update'),
-                ])),
+                # Users services
+                path('my-services/', ServiceViewSet.as_view({'get': 'my_services'}), name='my-services'),
+                # Retrieve route: GET /services/detail/<id>/
+                path('detail/<uuid:id>/', ServiceViewSet.as_view({'get': 'retrieve'}), name='service-detail'),
+                # Update route: PUT/PATCH /services/update/<id>/
+                path('update/<uuid:id>/', ServiceViewSet.as_view({'put': 'update', 'patch': 'update'}), name='service-update'),
             ])),
         ]
-        return default_urls + custom_urls
+        return custom_urls
     
 
 

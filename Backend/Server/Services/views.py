@@ -58,6 +58,15 @@ class ServiceViewSet(viewsets.ViewSet):
                 'data': response_serializer.data
             }, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+    def my_services(self, request):
+        queryset = Service.objects.filter(recipient=request.user)
+        if queryset is None:
+            return Response({"massage": "There is no services for you."}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = ServiceSerializer(queryset, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
 
 
 class ServicePaymentViewSet(viewsets.ViewSet):
