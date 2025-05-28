@@ -5,3 +5,6 @@ class ServicesConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'Services'
     verbose_name = 'سرویس ها'
+
+    def ready(self):
+        import Services.signals
