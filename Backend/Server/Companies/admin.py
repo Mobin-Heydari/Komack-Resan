@@ -10,6 +10,9 @@ from .models import (
     CompanyFirstItem,
     CompanySecondItem,
     CompanyCard,
+    CompanyAccountant,
+    CompanyExpert,
+    CompanyReceptionist
 )
 
 # -------------------------------
@@ -197,3 +200,8 @@ class CompanyCardAdmin(admin.ModelAdmin):
     list_display = ('company', 'card_number', 'expiration_date', 'card_holder_name', 'created_at')
     search_fields = ('company__name', 'card_number', 'card_holder_name')
     readonly_fields = ('created_at', 'updated_at',)
+
+
+admin.site.register(CompanyExpert)
+admin.site.register(CompanyAccountant)
+admin.site.register(CompanyReceptionist)

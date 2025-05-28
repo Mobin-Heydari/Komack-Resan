@@ -37,16 +37,16 @@ class CityAdmin(admin.ModelAdmin):
 
 @admin.register(RecipientAddress)
 class RecipientAddressAdmin(admin.ModelAdmin):
-    list_display = ('title', 'Recipient', 'city', 'address', 'created_at')
+    list_display = ('title', 'recipient', 'city', 'address', 'created_at')
     search_fields = ('title', 'address', 'Recipient__username', 'city__name')
     list_filter = ('city', 'created_at')
     readonly_fields = ('created_at', 'updated_at')
-    autocomplete_fields = ('Recipient', 'city')
+    autocomplete_fields = ('recipient', 'city')
     date_hierarchy = 'created_at'
     
     fieldsets = (
         ("مشخصات گیرنده", {
-            'fields': ('Recipient', 'title')
+            'fields': ('recipient', 'title')
         }),
         ("مکان", {
             'fields': ('city', 'address')

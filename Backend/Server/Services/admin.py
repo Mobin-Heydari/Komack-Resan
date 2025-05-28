@@ -33,8 +33,7 @@ class ServiceAdmin(admin.ModelAdmin):
     fieldsets = (
         ("اطلاعات اولیه سرویس", {
             'fields': (
-                'company', 
-                'recipient', 
+                'company',
                 'recipient_address', 
                 'title', 
                 'id', 
@@ -52,6 +51,9 @@ class ServiceAdmin(admin.ModelAdmin):
         }),
         ("تاریخ‌ها", {
             'fields': ('created_at', 'updated_at')
+        }),
+        ("کاربر ها", {
+            'fields': ('recipient', 'accountant', 'expert', 'receptionist')
         }),
     )
     
