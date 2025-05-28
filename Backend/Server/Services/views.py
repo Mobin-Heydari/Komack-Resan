@@ -7,6 +7,10 @@ from .models import Service, ServicePayment
 from .serializers import ServiceSerializer, ServicePaymentSerializer
 from .permissions import IsServiceActionAllowed, IsServicePaymentActionAllowed
 
+from Companies.models import CompanyAccountant, CompanyExpert, CompanyReceptionist
+
+
+
 
 
 class ServiceViewSet(viewsets.ViewSet):
@@ -67,6 +71,16 @@ class ServiceViewSet(viewsets.ViewSet):
         serializer = ServiceSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+
+    def set_receptionist_service(self, request, id):
+        queryset = get_object_or_404(Service, id=id)
+        if CompanyReceptionist.objects.filter(company=queryset.company, employee=request.user).exists():
+            instance = CompanyReceptionist.objects.get(company=queryset.company, employee=request.user)
+            queryset.receptionist = instance
+            queryset.save()
+            return Response({"massage": "You have became the receptionist in this service"}, status=status.HTTP_202_ACCEPTED)
+        else:
+            return Response({"massage": "You are not a receptionist in this company"})
 
 
 class ServicePaymentViewSet(viewsets.ViewSet):
